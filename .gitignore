@@ -4,11 +4,17 @@ venv/
 # Python cache
 __pycache__/
 *.pyc
+*.pyd
 
 # Environment variables
 .env
 
-# VS Code settings (optional)
+# Build files
+*.egg-info/
+dist/
+build/
+
+# IDE
 .vscode/
 
 # OS files
