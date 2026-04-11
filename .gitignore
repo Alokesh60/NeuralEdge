@@ -1,22 +1,16 @@
-# Virtual Environment
-venv/
-
-# Python cache
+# Python
 __pycache__/
 *.pyc
-*.pyd
+*.pyo
 
-# Environment variables
+# Virtual env
+venv/
 .env
 
-# Build files
-*.egg-info/
-dist/
-build/
+# ML caches
+.cache/
+huggingface_cache/
 
-# IDE
-.vscode/
-
-# OS files
+# OS
 .DS_Store
 Thumbs.db
