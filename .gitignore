@@ -20,3 +20,15 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Models (binary, large)
+*.pkl
+models/
+
+# Data files (can be regenerated)
+*.csv
+*.data
+
+# Generated charts and test outputs
+*.png
+test_*.png
