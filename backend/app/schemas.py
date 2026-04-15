@@ -31,3 +31,29 @@ class ResponseSchema(BaseModel):
 
     status: str
     message: Optional[str]
+
+from pydantic import BaseModel
+from typing import List, Dict, Optional
+
+# ... (keep your existing ResponseSchema and others) ...
+
+class FlexibleAuditRequest(BaseModel):
+    target_column: str
+    sensitive_columns: List[str]
+    privileged_groups: Dict[str, str]
+    model_choice: str = "logistic"
+    # model_file is handled via UploadFile separately
+
+class FlexibleAuditResponse(ResponseSchema):
+    # same structure as before
+    pass
+
+
+class ExplanationSummary(BaseModel):
+    verdict_explanation: str
+    suggestions: List[str]
+    metric_descriptions: Dict[str, str]
+
+class ResponseSchema(BaseModel):
+    # ... existing fields ...
+    explanation_summary: Optional[ExplanationSummary] = None

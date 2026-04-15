@@ -1,0 +1,19 @@
+{
+  "biased": {
+    "accuracy": 0.8155011867810845,
+    "disparity": 0.3301925778989999,
+    "worst_group": "Black_Female",
+    "worst_accuracy": 0.6028833551769331
+  },
+  "fair": {
+    "accuracy": 0.9673178747489501,
+    "disparity": 0.06290447406695765,
+    "worst_group": "Asian_Female",
+    "worst_accuracy": 0.9194187582562747
+  },
+  "improvement": {
+    "reduction": 0.26728810383204227,
+    "percent": 80.94915565116094
+  },
+  "timestamp": "2026-04-12T01:58:55.725592"
+}
