@@ -15,5 +15,19 @@
     "reduction": 0.26728810383204227,
     "percent": 80.94915565116094
   },
-  "timestamp": "2026-04-12T01:58:55.725592"
+  "timestamp": "2026-04-12T01:58:55.725592",
+
+  "overall": {
+    "accuracy": 0.9673
+  },
+  "disparity": {
+    "max_tpr_gap": 0.063,
+    "max_accuracy_gap": 0.048
+  },
+  "by_group": {
+    "Male": { "accuracy": 0.97, "tpr": 0.98 },
+    "Female": { "accuracy": 0.92, "tpr": 0.92 },
+    "Asian_Female": { "accuracy": 0.919, "tpr": 0.91 },
+    "Black_Female": { "accuracy": 0.603, "tpr": 0.60 }
+  }
 }
