@@ -6,14 +6,32 @@ export const useAudit = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const executeNlp = async (modelName) => {
+  const executeNlp = async ({
+    modelName,
+    benchmarks,
+    demographicGroups,
+  } = {}) => {
     setLoading(true);
     setError(null);
+    setData(null);
     try {
-      const result = await auditApi.runNlpAudit(modelName);
+      const result = await auditApi.runNlpAudit({
+        modelName,
+        benchmarks,
+        demographicGroups,
+      });
+      if (result?.status === "error") {
+        throw new Error(result?.message || "Audit failed.");
+      }
       setData(result);
+      return result;
     } catch (err) {
-      setError("Backend connection failed.");
+      const msg =
+        err && typeof err.message === "string"
+          ? err.message
+          : "Backend connection failed.";
+      setError(msg);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -22,11 +40,21 @@ export const useAudit = () => {
   const executeTabular = async (formData) => {
     setLoading(true);
     setError(null);
+    setData(null);
     try {
       const result = await auditApi.runTabularAudit(formData);
+      if (result?.status === "error") {
+        throw new Error(result?.message || "Tabular audit failed.");
+      }
       setData(result);
+      return result;
     } catch (err) {
-      setError("Tabular audit failed.");
+      const msg =
+        err && typeof err.message === "string"
+          ? err.message
+          : "Tabular audit failed.";
+      setError(msg);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -38,6 +66,9 @@ export const useAudit = () => {
     error,
     executeNlp,
     executeTabular,
-    reset: () => setData(null),
+    reset: () => {
+      setData(null);
+      setError(null);
+    },
   };
 };
