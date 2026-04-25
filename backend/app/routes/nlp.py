@@ -1,7 +1,7 @@
 # nlp.py
 from fastapi import APIRouter
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from app.services.nlp_service import run_nlp_audit
 
 router = APIRouter(prefix="/audit/nlp", tags=["NLP"])
@@ -15,6 +15,8 @@ SUPPORTED_MODELS = {
 
 class NLPAuditRequest(BaseModel):
     model_name: Optional[str] = "bert-base-uncased"
+    benchmarks: Optional[List[str]] = None
+    demographic_groups: Optional[List[str]] = None
 
 @router.post("/")
 async def audit_nlp(request: NLPAuditRequest):
@@ -24,5 +26,9 @@ async def audit_nlp(request: NLPAuditRequest):
             "status": "error",
             "message": f"Unsupported model '{model}'. Supported: {sorted(SUPPORTED_MODELS)}"
         }
-    result = await run_nlp_audit(model_name=model)
+    result = await run_nlp_audit(
+        model_name=model,
+        benchmarks=request.benchmarks,
+        demographic_groups=request.demographic_groups,
+    )
     return result
