@@ -2,20 +2,11 @@ import React from "react";
 import { VerdictBanner } from "../../components/shared/VerdictBanner";
 
 const NLPResults = ({ data }) => {
-  const {
-    overall,
-    explanation,
-    groups,
-    recommendations,
-    most_affected_group,
-    real_world_impact,
-    meta,
-    model_name,
-  } = data;
+  const { overall, explanation, real_world_impact, meta, model_name } = data;
   const ts = explanation.test_scores;
 
   return (
-    <div className="animate-in space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* 1. Verdict Banner */}
       <VerdictBanner overall={overall} />
 
@@ -177,17 +168,126 @@ const NLPResults = ({ data }) => {
           </div>
         </div>
       </div>
+
+      {/* 8. Gemini-Powered Analysis */}
+      {data.gemini_explanation && (
+        <div
+          className="card"
+          style={{
+            background: "linear-gradient(135deg, #fef7cd 0%, #fef3c7 100%)",
+            border: "1px solid #fde68a",
+          }}
+        >
+          <span className="card-label" style={{ color: "#92400e" }}>
+            🤖 Gemini-Powered Analysis
+          </span>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "1rem",
+              marginTop: "1rem",
+            }}
+          >
+            <div>
+              <h4
+                style={{
+                  fontSize: "0.8rem",
+                  fontWeight: "700",
+                  color: "#92400e",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Why Biased?
+              </h4>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#92400e",
+                  lineHeight: "1.5",
+                }}
+              >
+                {data.gemini_explanation.why_biased ||
+                  "Analysis not available."}
+              </p>
+            </div>
+            <div>
+              <h4
+                style={{
+                  fontSize: "0.8rem",
+                  fontWeight: "700",
+                  color: "#92400e",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Real-World Harm
+              </h4>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#92400e",
+                  lineHeight: "1.5",
+                }}
+              >
+                {data.gemini_explanation.real_world_harm ||
+                  "Analysis not available."}
+              </p>
+            </div>
+            <div>
+              <h4
+                style={{
+                  fontSize: "0.8rem",
+                  fontWeight: "700",
+                  color: "#92400e",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                Legal Risk
+              </h4>
+              <p
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#92400e",
+                  lineHeight: "1.5",
+                }}
+              >
+                {data.gemini_explanation.legal_risk ||
+                  "Analysis not available."}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 // Helper Component for the 3 Cards
 const TheoryCard = ({ icon, title, score, threshold, desc }) => {
+  if (score == null) {
+    return (
+      <div className="theory-card">
+        <div className="theory-card-icon">{icon}</div>
+        <div className="theory-card-name">{title}</div>
+        <p className="theory-card-desc">{desc}</p>
+        <div className="theory-card-score">
+          <span>Test skipped</span>
+          <span className="theory-score-val">—</span>
+        </div>
+        <span
+          className="theory-verdict"
+          style={{ background: "#e5e7eb", color: "#6b7280" }}
+        >
+          SKIPPED
+        </span>
+      </div>
+    );
+  }
   const passed = score <= threshold;
   return (
     <div className={`theory-card ${passed ? "passed" : "failed"}`}>
       <div className="theory-card-icon">{icon}</div>
-      <div className="theory-card-title">{title}</div>
+      <div className="theory-card-name">{title}</div>
       <p className="theory-card-desc">{desc}</p>
       <div className="theory-card-score">
         <span>Bias gap</span>
