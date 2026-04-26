@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 
 from transformers import pipeline
 from detoxify import Detoxify
-from app.services.gemini_service import get_gemini_explanation
 
 
 # ─────────────────────────────────────────────
@@ -711,33 +710,20 @@ async def run_nlp_audit(
     }
 
     # ── Gemini enhancement layer (non-blocking — falls back gracefully) ──
-    gemini_data = await get_gemini_explanation(
-        model_name          = model_name,
-        overall_bias        = overall_bias,
-        verdict             = verdict,
-        wino_score          = wino_score,     # FIX 6: use named vars, not wino["bias_score"]
-        parity_gap          = parity_gap,
-        tox_gap             = tox_gap,
-        most_affected_group = most_affected["group"],
-    )
-
-    result["gemini_explanation"] = {
-        "powered_by_gemini": gemini_data is not None,
-        "why_biased":        gemini_data.get("why_biased")      if gemini_data else None,
-        "real_world_harm":   gemini_data.get("real_world_harm") if gemini_data else None,
-        "legal_risk":        gemini_data.get("legal_risk")      if gemini_data else None,
+    result = {
+        "gemini_explanation": {
+        "powered_by_gemini": False,
+        "why_biased": "Bias detected based on statistical disparities across demographic groups.",
+        "real_world_harm": "May lead to unfair outcomes in hiring, moderation, or automated decision systems.",
+        "legal_risk": "Potential risk under fairness and anti-discrimination regulations."
+    },
     }
-
-    # Gemini remediations override static ones if available
-    if gemini_data and gemini_data.get("remediation_steps"):
-        result["recommendations"] = gemini_data["remediation_steps"][:5]
 
     # FIX 7: cache_key is now defined — this line works correctly
     _result_cache[cache_key] = result
 
     print(
-        f"[NLP Audit] Complete in {total_time}s. "
-        f"Benchmarks run: {result['audit_config']['benchmarks_run']}. "
-        f"Gemini: {'✓' if gemini_data else '✗ (fallback)'}."
+    f"[NLP Audit] Complete in {total_time}s. "
+    f"Benchmarks run: {result['audit_config']['benchmarks_run']}."
     )
     return result

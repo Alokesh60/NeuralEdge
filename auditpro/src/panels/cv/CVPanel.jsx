@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import "./CVPanel.css";
 
 const CVPanel = () => {
   const [fileName, setFileName] = useState("Upload Image");
@@ -36,12 +37,17 @@ const CVPanel = () => {
     setData(null);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/scan", {
+      const res = await fetch("http://127.0.0.1:8000/audit/cv/", {
         method: "POST",
         body: formData,
       });
 
       const result = await res.json();
+      if (!res.ok) {
+        throw new Error("API failed");
+      }
+
+      console.log(result);
       setData(result);
     } catch (err) {
       console.error(err);
@@ -108,7 +114,7 @@ const CVPanel = () => {
               disabled={loading}
               style={{ marginTop: "10px", width: "100%" }}
             >
-              {loading ? "🔄 Scanning..." : "▶ Scan CV"}
+              {loading ? "🔄 Scanning..." : data ? "✔ Scanned" : "▶ Scan CV"}
             </button>
           )}
 
@@ -127,6 +133,11 @@ const CVPanel = () => {
 
       {/* ───── MAIN CONTENT ───── */}
       <main>
+        <h2 style={{ marginBottom: "10px" }}>🤖 CV Bias Audit Report</h2>
+
+        <p style={{ color: "#64748b", marginBottom: "20px" }}>
+          AI-driven fairness evaluation of computer vision model
+        </p>
         {/* BEFORE UPLOAD */}
         {!data && !loading && (
           <div
@@ -159,103 +170,115 @@ const CVPanel = () => {
 
         {/* RESULTS */}
         {!loading && data && (
-          <div className="animate-in">
+          <div className="animate-in results-grid">
             {/* Prediction */}
-            <div className="card">
+            <div className="card premium-card prediction-card">
               <span className="card-label">Prediction</span>
 
-              <h2>{data.prediction}</h2>
+              <div className="flex-between">
+                <h2 className="verdict-text">{data.overall?.verdict}</h2>
 
-              <p>
-                Confidence:{" "}
-                <strong>{(data.confidence * 100).toFixed(2)}%</strong>
+                <span
+                  className={`badge pulse-badge verdict-${
+                    data.overall?.verdict === "FAIL" ? "fail" : "pass"
+                  }`}
+                >
+                  {data.overall?.verdict}
+                </span>
+              </div>
+
+              <p className="metric">
+                Accuracy:{" "}
+                <strong>{`${(Number(data.overall?.accuracy) || 0) * (100).toFixed(2) ?? "0.00"}%`}</strong>
               </p>
 
-              {/* Progress bar */}
-              <div style={{ marginTop: "10px" }}>
+              {/* Animated progress */}
+              <div className="progress">
                 <div
+                  className="progress-fill accuracy"
                   style={{
-                    height: "8px",
-                    background: "#e5e7eb",
-                    borderRadius: "10px",
+                    width: `${Math.min(Math.max((Number(data.overall?.accuracy) || 0) * 100, 0), 100)}%`,
                   }}
-                >
-                  <div
-                    style={{
-                      width: `${data.confidence * 100}%`,
-                      height: "100%",
-                      background: "#4f46e5",
-                      borderRadius: "10px",
-                    }}
-                  ></div>
-                </div>
+                ></div>
               </div>
             </div>
 
             {/* Probabilities */}
-            <div className="card">
-              <span className="card-label">Class Probabilities</span>
-
-              <p>Male: {data.probabilities?.Male}</p>
-              <p>Female: {data.probabilities?.Female}</p>
-            </div>
 
             {/* Bias */}
-            <div className="card">
-              <span className="card-label">Bias Assessment</span>
+            <div className="card premium-card bias-card">
+              <span className="card-label">Bias Analysis</span>
 
-              <div
-                style={{
-                  padding: "6px 12px",
-                  borderRadius: "20px",
-                  display: "inline-block",
-                  fontWeight: "600",
-                  background:
-                    data.bias_risk === "high"
-                      ? "#fee2e2"
-                      : data.bias_risk === "medium"
-                        ? "#fef3c7"
-                        : "#dcfce7",
-                  color:
-                    data.bias_risk === "high"
-                      ? "#b91c1c"
-                      : data.bias_risk === "medium"
-                        ? "#92400e"
-                        : "#065f46",
-                }}
-              >
-                {data.bias_risk?.toUpperCase()}
+              <p className="bias-note">
+                Bias level indicator (higher = more unfair)
+              </p>
+
+              <div className="bias-container">
+                <div className="bias-score">
+                  {Number(data.overall?.bias_score) ?? 0}
+                </div>
+
+                <div className="bias-meta">
+                  <p className="metric-label">Bias Score</p>
+                  <p className="metric-sub">Lower is better (fairer model)</p>
+                </div>
               </div>
 
-              <p style={{ marginTop: "10px" }}>Risk Score: {data.risk_score}</p>
+              {/* Bias meter */}
+              <div className="progress">
+                <div
+                  className="progress-fill bias"
+                  style={{
+                    width: `${Math.min(Math.max((Number(data.overall?.bias_score) || 0) * 100, 0), 100)}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="card insight-box">
+              <span className="card-label">💡 AI Insight</span>
+
+              <p className="insight-text">
+                The model shows{" "}
+                <strong>{Number(data.overall?.bias_score) ?? 0}</strong> bias
+                score, indicating potential unfairness across demographic
+                groups.
+              </p>
+
+              <p className="recommendation">
+                Recommendation:{" "}
+                <span className="recommendation-highlight">
+                  {data.recommendations?.[0] || "Improve dataset balance"}
+                </span>
+              </p>
             </div>
 
             {/* Heatmap */}
-            <div className="card">
+            <div className="card premium-card heatmap-card">
               <span className="card-label">🔥 Model Attention</span>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "10px",
-                }}
-              >
-                <img
-                  src={preview}
-                  alt="original"
-                  style={{ width: "100%", borderRadius: "8px" }}
-                />
+              <div className="image-grid">
+                <div>
+                  <p className="img-label">Original</p>
+                  <img src={preview} alt="Uploaded CV" className="img-box" />
+                </div>
 
-                {data.heatmap_base64 ? (
-                  <img
-                    src={`data:image/png;base64,${data.heatmap_base64}`}
-                    alt="heatmap"
-                    style={{ width: "100%", borderRadius: "8px" }}
-                  />
-                ) : (
-                  <p>No heatmap available</p>
-                )}
+                <div>
+                  <p className="img-label">Grad-CAM</p>
+                  {data.explanation?.image_base64 ? (
+                    <img
+                      src={`data:image/png;base64,${data.explanation.image_base64}`}
+                      className="img-box"
+                    />
+                  ) : (
+                    <div className="no-heatmap-box">
+                      <h4>⚠️ Grad-CAM not generated</h4>
+                      <p className="sub">
+                        Explanation model not enabled in this demo
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
