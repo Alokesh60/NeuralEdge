@@ -1,10 +1,9 @@
-export const BASE_URL_BACKEND = "https://your-render-url";
-export const BASE_URL_NLP = "https://your-hf-space-url";
+const BASE_URL = "http://localhost:8000";
 
 export const auditApi = {
   // NLP Route
   runNlpAudit: async ({ modelName, benchmarks, demographicGroups } = {}) => {
-    const response = await fetch(`${BASE_URL_NLP}/audit/nlp/`, {
+    const response = await fetch(`${BASE_URL}/audit/nlp/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -26,7 +25,7 @@ export const auditApi = {
 
   // Tabular Route (Flexible)
   runTabularAudit: async (formData) => {
-    const response = await fetch(`${BASE_URL_BACKEND}/audit/tabular/flexible`, {
+    const response = await fetch(`${BASE_URL}/audit/tabular/flexible`, {
       method: "POST",
       body: formData, // Automatic boundary for multipart/form-data
     });
