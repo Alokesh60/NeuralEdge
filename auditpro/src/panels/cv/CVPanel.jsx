@@ -56,8 +56,8 @@ const CVPanel = () => {
 
   // 🔥 Derived values (clean logic)
   const confidence = (Number(data?.confidence) || 0) * 100;
-  const riskScore = Number(data?.bias_assessment?.risk_score) || 0;
-  const risk = data?.bias_assessment?.bias_risk;
+  const riskScore = Number(data?.bias_report?.bias_score) || 0;
+  const risk = data?.bias_report?.bias_risk?.toLowerCase();
 
   const heatmapSrc = data?.heatmap_base64
     ? `data:image/jpeg;base64,${data.heatmap_base64}`
