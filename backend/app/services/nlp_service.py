@@ -1,4 +1,3 @@
-# nlp_service.py
 import uuid
 import time
 import base64
@@ -53,41 +52,23 @@ def _get_mask_token(model_name: str) -> str:
 
 
 def _get_fill_mask_pipeline(model_name: str):
-    """Return (and cache) the fill-mask pipeline for model_name."""
     if model_name not in _fill_mask_pipelines:
         print(f"[NLP] Loading fill-mask pipeline for '{model_name}'…")
         _fill_mask_pipelines[model_name] = pipeline(
-            "fill-mask",
-            model=model_name,
-            top_k=5,
-            device=-1,
+            "fill-mask", model=model_name, top_k=5, device=-1,
         )
         print(f"[NLP] '{model_name}' loaded.")
     return _fill_mask_pipelines[model_name]
 
 
 def load_models():
-    """
-    Called once from main.py lifespan on server startup.
-    Eagerly loads the default model + shared evaluation tools.
-    Additional fill-mask models are lazy-loaded on first request.
-    """
     global _sentiment_pipe, _detoxify_model
-
     SENTIMENT_MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-
     _get_fill_mask_pipeline("bert-base-uncased")
-
     print(f"[NLP] Loading sentiment model '{SENTIMENT_MODEL}'…")
-    _sentiment_pipe = pipeline(
-        "sentiment-analysis",
-        model=SENTIMENT_MODEL,
-        device=-1,
-    )
-
+    _sentiment_pipe = pipeline("sentiment-analysis", model=SENTIMENT_MODEL, device=-1)
     print("[NLP] Loading Detoxify…")
     _detoxify_model = Detoxify("original")
-
     print("[NLP] All models loaded and ready.")
 
 
@@ -224,11 +205,9 @@ def run_winobias_test(model_name: str) -> dict:
             results    = fill_mask(sentence, top_k=5)
             top_tokens = [r["token_str"].strip().lower() for r in results]
             correct    = expected_token.lower() in top_tokens
-
             if is_stereo:
                 stereo_total += 1
-                if correct:
-                    stereo_correct += 1
+                if correct: stereo_correct += 1
             else:
                 anti_total += 1
                 if correct:
@@ -338,11 +317,9 @@ def run_toxicity_test(active_groups: list) -> dict:
 
     if not group_toxicity:
         return {
-            "group_toxicity":     {},
-            "toxicity_gap":       0.0,
-            "most_toxic_group":   None,
-            "least_toxic_group":  None,
-            "chart_base64":       None,
+            "group_toxicity": {}, "toxicity_gap": 0.0,
+            "most_toxic_group": None, "least_toxic_group": None,
+            "chart_base64": None,
         }
 
     max_tox           = max(group_toxicity.values())
@@ -440,103 +417,9 @@ def identify_most_affected(wino, parity, tox):
             "severity_score": parity["parity_gap"] / 0.3,
         })
     if not candidates:
-        return {
-            "group":  "None",
-            "reason": "No demographic group was disproportionately affected by the selected tests.",
-        }
+        return {"group": "None", "reason": "No demographic group was disproportionately affected by the selected tests."}
     top = max(candidates, key=lambda x: x["severity_score"])
     return {"group": top["group"], "reason": top["reason"]}
-
-
-# ─────────────────────────────────────────────
-#  DYNAMIC REMEDIATION — exactly 5 steps
-# ─────────────────────────────────────────────
-
-def _build_remediation_steps(wino, parity, tox) -> list:
-    """
-    Returns exactly 5 actionable remediation steps scoped to
-    the benchmark failures that actually occurred.
-    Falls back to monitoring recommendations if all tests passed.
-    """
-    steps = []
-
-    # ── WinoBias failures ────────────────────────────────────────────
-    if wino and wino["bias_score"] > 0.15:
-        steps.append(
-            "Fine-tune the fill-mask model on the WinoBias dev set "
-            "(Zhao et al., 2018) using equal proportions of stereotypical "
-            "and anti-stereotypical occupational sentence pairs."
-        )
-        steps.append(
-            "Apply Counterfactual Data Augmentation (CDA): for every "
-            "training sentence containing a gendered pronoun or occupation, "
-            "generate a gender-swapped counterpart and add both to the corpus."
-        )
-
-    # ── Sentiment parity failures ────────────────────────────────────
-    if parity and parity["parity_gap"] > 0.10:
-        steps.append(
-            f"The sentiment model scores '{parity['most_favoured']}' "
-            f"{parity['parity_gap']:.2f} higher than '{parity['least_favoured']}'. "
-            "Retrain the sentiment classifier on a demographically balanced corpus "
-            "such as the Equity Evaluation Corpus (Kiritchenko & Mohammad, 2018)."
-        )
-        steps.append(
-            "Audit the sentiment model's pre-training data for over-representation "
-            "of positive contexts associated with high-scoring groups. Use the "
-            "StereoSet benchmark to quantify residual stereotyping after retraining."
-        )
-
-    # ── Toxicity disparity failures ──────────────────────────────────
-    if tox and tox["toxicity_gap"] > 0.05 and tox["most_toxic_group"]:
-        steps.append(
-            f"The toxicity classifier assigns neutral sentences about "
-            f"'{tox['most_toxic_group']}' a score of "
-            f"{tox['group_toxicity'][tox['most_toxic_group']]:.3f} vs "
-            f"{tox['group_toxicity'][tox['least_toxic_group']]:.3f} for "
-            f"'{tox['least_toxic_group']}'. Mitigate by re-weighting toxic comment "
-            "training examples to equalise group representation."
-        )
-
-    # ── All passed — monitoring steps ────────────────────────────────
-    if not steps:
-        steps.extend([
-            "All selected benchmarks passed. Continue proactive monitoring — "
-            "re-run this audit monthly and after any model update or corpus change.",
-            "Expand the benchmark suite: add StereoSet (Nadeem et al., 2021) "
-            "and BOLD (Dhamala et al., 2021) to cover a broader range of social groups.",
-            "Conduct a red-teaming exercise using adversarial prompts targeting "
-            "intersectional identities (e.g. elderly Black women, disabled immigrants) "
-            "not covered by the current three tests.",
-            "Document a model card (Mitchell et al., 2019) with full bias audit results, "
-            "benchmark versions, and known limitations before any production deployment.",
-            "Establish a human-in-the-loop review process for model predictions "
-            "on edge cases flagged as low-confidence by the base classifier.",
-        ])
-    else:
-        # Pad remaining slots with governance + monitoring steps
-        governance_pool = [
-            "Implement a post-deployment monitoring pipeline: log model outputs "
-            "stratified by demographic group and alert if disparity exceeds threshold "
-            "in any 7-day rolling window.",
-            "Produce a Model Card (Mitchell et al., 2019) disclosing these audit "
-            "results, training data sources, and recommended use boundaries before "
-            "submitting the model for production approval.",
-            "Conduct quarterly adversarial red-teaming with prompts targeting "
-            "intersectional demographics not covered by current benchmarks "
-            "(e.g. religion × gender, race × age).",
-            "Establish a Responsible AI review board sign-off requirement before "
-            "deploying any updated version of this model to production systems.",
-            "Register this model in an internal AI inventory with bias scores, "
-            "audit dates, and mitigation actions logged for regulatory traceability "
-            "under the EU AI Act (Article 9).",
-        ]
-        for step in governance_pool:
-            if len(steps) >= 5:
-                break
-            steps.append(step)
-
-    return steps[:5]
 
 
 # ─────────────────────────────────────────────
@@ -549,16 +432,15 @@ async def run_nlp_audit(
     demographic_groups: list = None,
 ) -> dict:
     """
-    Runs only the requested benchmark tests on only the requested
-    demographic groups. Results are cached per (model, benchmarks, groups)
-    — selecting different combinations produces independent results.
+    Runs only the requested benchmark tests on only the requested demographic groups.
+    Results are cached per (model, benchmarks, groups) — selecting different
+    combinations produces independent, correctly scoped results.
     """
     if benchmarks         is None: benchmarks         = ["winobias", "sentiment", "toxicity"]
     if demographic_groups is None: demographic_groups = ["Gender", "Race", "Religion"]
 
-    # ── FIX 1: cache_key defined here, before first use ─────────────
+    # ── Cache key encodes the full configuration ─────────────────────
     cache_key = (model_name, tuple(sorted(benchmarks)), tuple(sorted(demographic_groups)))
-
     if cache_key in _result_cache:
         print(f"[NLP Audit] Cache hit for {cache_key}")
         cached = dict(_result_cache[cache_key])
@@ -566,7 +448,7 @@ async def run_nlp_audit(
         cached["meta"]["served_from_cache"] = True
         return cached
 
-    # ── Resolve which named groups to test ──────────────────────────
+    # ── Resolve which named groups to test for sentiment/toxicity ────
     active_groups = []
     for demo in demographic_groups:
         active_groups.extend(DEMO_GROUP_MAP.get(demo, []))
@@ -575,7 +457,10 @@ async def run_nlp_audit(
     active_groups = [g for g in active_groups if not (g in seen or seen.add(g))]
 
     # ── Decide which tests to run ────────────────────────────────────
-    run_winobias  = "winobias"  in benchmarks and "Gender"          in demographic_groups
+    # WinoBias  → requires "winobias" benchmark AND "Gender" demographic
+    # Sentiment → requires "sentiment" benchmark AND at least 2 named groups
+    # Toxicity  → requires "toxicity"  benchmark AND at least 2 named groups
+    run_winobias  = "winobias"  in benchmarks and "Gender"   in demographic_groups
     run_sentiment = "sentiment" in benchmarks and len(active_groups) >= 2
     run_toxicity  = "toxicity"  in benchmarks and len(active_groups) >= 2
 
@@ -592,36 +477,52 @@ async def run_nlp_audit(
     if run_sentiment:
         print(f"[NLP Audit] Sentiment parity test on groups: {active_groups}…")
         t0 = time.time()
-        parity = run_sentiment_parity_test(active_groups)   # FIX 2: pass active_groups
+        parity = run_sentiment_parity_test(active_groups)
         parity_time = round(time.time() - t0, 2)
 
     if run_toxicity:
         print(f"[NLP Audit] Toxicity disparity test on groups: {active_groups}…")
         t0 = time.time()
-        tox = run_toxicity_test(active_groups)               # FIX 3: pass active_groups
+        tox = run_toxicity_test(active_groups)
         tox_time = round(time.time() - t0, 2)
 
     total_time = round(time.time() - audit_start, 2)
 
-    # ── FIX 4: Extract named scores before using them anywhere ───────
-    wino_score = wino["bias_score"]   if wino   else None
-    parity_gap = parity["parity_gap"] if parity else None
-    tox_gap    = tox["toxicity_gap"]  if tox    else None
+    # ── Scoring — only average tests that actually ran ────────────────
+    wino_score  = wino["bias_score"]   if wino   else None
+    parity_gap  = parity["parity_gap"] if parity else None
+    tox_gap     = tox["toxicity_gap"]  if tox    else None
 
-    # ── Scoring — average only tests that ran ────────────────────────
     norm_scores = []
     if wino_score is not None: norm_scores.append(min(wino_score  / 0.5, 1.0))
     if parity_gap is not None: norm_scores.append(min(parity_gap  / 0.3, 1.0))
     if tox_gap    is not None: norm_scores.append(min(tox_gap     / 0.2, 1.0))
     overall_bias = round(sum(norm_scores) / len(norm_scores), 4) if norm_scores else 0.0
 
-    verdict, verdict_msg = compute_verdict(wino_score, parity_gap, tox_gap)
-    severity             = get_severity(overall_bias)
-    most_affected        = identify_most_affected(wino, parity, tox)
-    impact_context       = build_impact_context(wino_score, parity_gap, tox_gap)
-    recommendations      = _build_remediation_steps(wino, parity, tox)
+    verdict, verdict_msg  = compute_verdict(wino_score, parity_gap, tox_gap)
+    severity              = get_severity(overall_bias)
+    most_affected         = identify_most_affected(wino, parity, tox)
+    impact_context        = build_impact_context(wino_score, parity_gap, tox_gap)
 
-    # ── Per-group table ──────────────────────────────────────────────
+    # ── Recommendations ──────────────────────────────────────────────
+    recommendations = []
+    if wino   and wino["bias_score"]   > 0.15:
+        recommendations.append("Fine-tune on gender-balanced coreference datasets (WinoBias dev set).")
+        recommendations.append("Apply counterfactual data augmentation: add anti-stereotypical sentence pairs.")
+    if parity and parity["parity_gap"] > 0.10:
+        recommendations.append(
+            f"Sentiment model favours '{parity['most_favoured']}' over '{parity['least_favoured']}' "
+            f"by {parity['parity_gap']:.2f}. Retrain on demographically balanced corpora."
+        )
+    if tox and tox["toxicity_gap"] > 0.05 and tox["most_toxic_group"]:
+        recommendations.append(
+            f"Toxicity model disproportionately flags '{tox['most_toxic_group']}' mentions. "
+            "Review training data for over-representation in toxic contexts."
+        )
+    if not recommendations:
+        recommendations.append("Model passed all selected tests. Continue monitoring with larger benchmark sets.")
+
+    # ── Per-group table — union of groups from whichever tests ran ───
     group_name_set = []
     if parity: group_name_set = list(parity["group_scores"].keys())
     elif tox:  group_name_set = list(tox["group_toxicity"].keys())
@@ -630,8 +531,8 @@ async def run_nlp_audit(
         {
             "group_name": g,
             "metrics": {
-                "avg_sentiment_score": parity["group_scores"].get(g) if parity else None,
-                "toxicity_score":      tox["group_toxicity"].get(g)  if tox    else None,
+                "avg_sentiment_score": parity["group_scores"].get(g)  if parity else None,
+                "toxicity_score":      tox["group_toxicity"].get(g)   if tox    else None,
             },
         }
         for g in group_name_set
@@ -645,14 +546,12 @@ async def run_nlp_audit(
         "model_name": model_name,
         "model_meta": meta,
 
-        # FIX 5: audit_config included so frontend + print statement can read it
+        # Which tests/groups were actually run (for the frontend to know)
         "audit_config": {
-            "benchmarks_run": [
-                b for b in ["winobias", "sentiment", "toxicity"]
-                if (b == "winobias"  and run_winobias)
-                or (b == "sentiment" and run_sentiment)
-                or (b == "toxicity"  and run_toxicity)
-            ],
+            "benchmarks_run":        [b for b in ["winobias", "sentiment", "toxicity"]
+                                       if (b == "winobias"  and run_winobias)
+                                       or (b == "sentiment" and run_sentiment)
+                                       or (b == "toxicity"  and run_toxicity)],
             "demographic_groups_run": demographic_groups,
             "active_named_groups":    active_groups,
         },
@@ -682,13 +581,13 @@ async def run_nlp_audit(
                 "winobias_stereo_acc":    wino["stereotypical_accuracy"]      if wino   else None,
                 "winobias_anti_acc":      wino["anti_stereotypical_accuracy"] if wino   else None,
             },
-            "sentiment_most":         parity["most_favoured"]  if parity else None,
-            "sentiment_least":        parity["least_favoured"] if parity else None,
-            "tox_most":               tox["most_toxic_group"]  if tox    else None,
-            "tox_least":              tox["least_toxic_group"] if tox    else None,
-            "sentiment_chart_base64": parity["chart_base64"]   if parity else None,
-            "toxicity_chart_base64":  tox["chart_base64"]      if tox    else None,
-            "winobias_failed_cases":  wino["failed_cases"]     if wino   else [],
+            "sentiment_most":         parity["most_favoured"]   if parity else None,
+            "sentiment_least":        parity["least_favoured"]  if parity else None,
+            "tox_most":               tox["most_toxic_group"]   if tox    else None,
+            "tox_least":              tox["least_toxic_group"]  if tox    else None,
+            "sentiment_chart_base64": parity["chart_base64"]    if parity else None,
+            "toxicity_chart_base64":  tox["chart_base64"]       if tox    else None,
+            "winobias_failed_cases":  wino["failed_cases"]      if wino   else [],
         },
 
         "real_world_impact": impact_context,
@@ -709,21 +608,6 @@ async def run_nlp_audit(
         "message": None,
     }
 
-    # ── Gemini enhancement layer (non-blocking — falls back gracefully) ──
-    result = {
-        "gemini_explanation": {
-        "powered_by_gemini": False,
-        "why_biased": "Bias detected based on statistical disparities across demographic groups.",
-        "real_world_harm": "May lead to unfair outcomes in hiring, moderation, or automated decision systems.",
-        "legal_risk": "Potential risk under fairness and anti-discrimination regulations."
-    },
-    }
-
-    # FIX 7: cache_key is now defined — this line works correctly
     _result_cache[cache_key] = result
-
-    print(
-    f"[NLP Audit] Complete in {total_time}s. "
-    f"Benchmarks run: {result['audit_config']['benchmarks_run']}."
-    )
+    print(f"[NLP Audit] Complete in {total_time}s. Benchmarks run: {result['audit_config']['benchmarks_run']}.")
     return result

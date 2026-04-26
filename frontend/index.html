@@ -1,17 +1,1339 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NeuralEdge - AI Bias Auditor | Fairness Intelligence Platform</title>
-    <meta
-      name="description"
-      content="Professional AI bias auditing system for fair and ethical AI"
-    />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AuditPro | AI Ethics & Bias Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --primary: #4f46e5;
+    --primary-light: #eef2ff;
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.25rem; letter-spacing: -0.02em; }
+  .logo-icon { color: var(--primary); font-size: 1.5rem; }
+  .user-badge { font-size: 0.8rem; background: var(--primary-light); color: var(--primary); padding: 4px 12px; border-radius: 20px; font-weight: 600; }
+
+  .container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
+
+  .nav-tabs {
+    display: flex;
+    background: #e2e8f0;
+    padding: 4px;
+    border-radius: 10px;
+    width: fit-content;
+    margin-bottom: 2rem;
+  }
+  .tab {
+    padding: 8px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+  }
+  .tab.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow); }
+
+  .panel { display: none; }
+  .panel.active { display: grid; }
+  .panel.active.full { display: block; }
+
+  .dashboard { grid-template-columns: 280px 1fr; gap: 2rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .card-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; display: block; }
+
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-bottom: 1rem;
+  }
+  .upload-area:hover { border-color: var(--primary); }
+  .file-name { font-size: 0.85rem; font-weight: 600; color: var(--primary); display: block; }
+  .file-size { font-size: 0.75rem; color: var(--text-muted); }
+
+  .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 6px 14px;
+    border-radius: 100px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.2s;
+    user-select: none;
+  }
+  .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  .btn-run {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: filter 0.2s;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+  }
+  .btn-run:hover { filter: brightness(1.1); }
+  .btn-run:disabled { opacity: 0.6; cursor: not-allowed; filter: none; }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 11px;
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.75rem;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+  }
+  .btn-secondary:hover { background: var(--primary-light); }
+
+  .verdict-banner {
+    background: #fef2f2;
+    border-left: 4px solid var(--danger);
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  .verdict-banner.pass { background: #f0fdf4; border-left-color: var(--success); }
+  .verdict-title { font-weight: 700; color: #991b1b; font-size: 1rem; }
+  .verdict-sub { font-size: 0.85rem; color: #b91c1c; margin-top: 2px; }
+  .verdict-banner.pass .verdict-title { color: #065f46; }
+  .verdict-banner.pass .verdict-sub { color: #047857; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); padding: 1.25rem; border-radius: var(--radius-md); text-align: center; box-shadow: var(--shadow); }
+  .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 600; }
+  .stat-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .chart-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  .bar-row { margin-bottom: 12px; }
+  .bar-info { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; font-weight: 500; }
+  .bar-track { height: 8px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; background: var(--primary); border-radius: 10px; }
+
+  .attention-token {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    margin: 3px;
+    font-weight: 500;
+  }
+  .probe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .probe-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; box-shadow: var(--shadow); }
+  .probe-prompt { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .probe-result { font-size: 0.85rem; line-height: 1.6; color: var(--text-main); }
+  .highlight-bias { color: var(--danger); font-weight: 700; }
+  .probe-stat { margin-top: 0.5rem; font-size: 0.72rem; color: var(--danger); font-family: 'JetBrains Mono', monospace; background: #fef2f2; padding: 4px 8px; border-radius: 4px; }
+
+  .heatmap-table { width: 100%; border-collapse: separate; border-spacing: 4px; }
+  .heatmap-table th { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-align: center; padding: 4px; }
+  .heatmap-table td { text-align: center; padding: 10px 6px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; }
+  .hm-label { text-align: right !important; color: var(--text-muted); font-size: 0.75rem; font-family: 'Inter', sans-serif !important; font-weight: 500 !important; background: transparent !important; }
+
+  .gradcam-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .gradcam-box { border-radius: var(--radius-md); overflow: hidden; aspect-ratio: 1; position: relative; background: #1e1b2e; display: flex; align-items: center; justify-content: center; }
+  .gradcam-caption { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; font-size: 0.7rem; padding: 5px 8px; text-align: center; font-weight: 600; }
+
+  .warning-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-md); padding: 0.75rem 1rem; font-size: 0.8rem; color: #b91c1c; margin-top: 0.75rem; font-weight: 500; }
+  .success-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-md); padding: 0.75rem 1rem; font-size: 0.8rem; color: #065f46; margin-top: 0.75rem; font-weight: 500; }
+
+  .compare-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-label { color: var(--text-muted); width: 120px; font-size: 0.8rem; }
+  .compare-before { color: var(--danger); font-family: 'JetBrains Mono', monospace; font-weight: 600; width: 52px; }
+  .compare-arrow { color: var(--text-muted); }
+  .compare-after { color: var(--success); font-family: 'JetBrains Mono', monospace; font-weight: 600; width: 52px; }
+  .compare-delta { font-size: 0.75rem; color: var(--success); font-weight: 600; margin-left: auto; }
+
+  .section-divider { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 1.25rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+
+  /* ═══════════════════════════════════
+     NLP-SPECIFIC STYLES
+  ═══════════════════════════════════ */
+
+  .nlp-model-chip {
+    border-radius: var(--radius-md) !important;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem !important;
+    padding: 8px 12px !important;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+
+  .severity-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .severity-CRITICAL { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+  .severity-HIGH     { background:#fef2f2; color:#c2410c; border:1px solid #fed7aa; }
+  .severity-MODERATE { background:#fffbeb; color:#92400e; border:1px solid #fde68a; }
+  .severity-LOW      { background:#f0fdf4; color:#065f46; border:1px solid #bbf7d0; }
+
+  .nlp-step-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .nlp-step-row.running { border-color: var(--primary); background: var(--primary-light); }
+  .nlp-step-row.done    { border-color: #bbf7d0; background: #f0fdf4; }
+  .nlp-step-row.failed  { border-color: #fecaca; background: #fef2f2; }
+  .step-status { font-size: 1.1rem; margin-top: 1px; flex-shrink: 0; }
+
+  .nlp-theory-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .theory-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .theory-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .theory-card.passed::before { background: var(--success); }
+  .theory-card.failed::before { background: var(--danger); }
+  .theory-card-icon { font-size: 1.6rem; margin-bottom: 0.5rem; }
+  .theory-card-name { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.25rem; }
+  .theory-card-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text-main); }
+  .theory-card-desc { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 0.875rem; }
+  .theory-card-score {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    margin-bottom: 6px;
+    font-size: 0.78rem;
+  }
+  .theory-score-val { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.9rem; }
+  .theory-threshold { font-size: 0.68rem; color: var(--text-muted); }
+  .theory-verdict { display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 100px; margin-top: 8px; }
+  .theory-verdict.pass { background: #f0fdf4; color: #065f46; }
+  .theory-verdict.fail { background: #fef2f2; color: #991b1b; }
+
+  .nlp-chart-img {
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    display: block;
+  }
+
+  .wino-case-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .wino-case-table th { text-align: left; padding: 8px 10px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .wino-case-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.4; }
+  .wino-case-table tr:last-child td { border-bottom: none; }
+  .wino-token { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+  .wino-token.expected { color: var(--success); }
+  .wino-token.got { color: var(--danger); }
+
+  .affected-group-card {
+    background: linear-gradient(135deg, #fef3c7 0%, #fef9ec 100%);
+    border: 1px solid #fde68a;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .affected-group-icon { font-size: 2rem; flex-shrink: 0; }
+  .affected-group-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #92400e; margin-bottom: 2px; }
+  .affected-group-name { font-size: 1.25rem; font-weight: 800; color: #78350f; margin-bottom: 4px; }
+  .affected-group-reason { font-size: 0.82rem; color: #92400e; line-height: 1.55; }
+
+  .groups-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .groups-table th { text-align: left; padding: 8px 12px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+  .groups-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .groups-table tr:last-child td { border-bottom: none; }
+  .groups-table tr:hover td { background: var(--bg); }
+  .group-pill { display: inline-block; padding: 2px 10px; border-radius: 100px; font-size: 0.72rem; font-weight: 600; background: var(--primary-light); color: var(--primary); }
+
+  .impact-section { margin-bottom: 1.5rem; }
+  .impact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid var(--danger);
+    box-shadow: var(--shadow);
+  }
+  .impact-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .impact-card-test { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--danger); }
+  .impact-section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .impact-section-box { background: var(--bg); border-radius: var(--radius-md); padding: 1rem; }
+  .impact-section-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .impact-section-text { font-size: 0.8rem; color: var(--text-main); line-height: 1.65; }
+
+  .reco-list { display: flex; flex-direction: column; gap: 10px; }
+  .reco-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: var(--bg); border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.82rem; line-height: 1.55; }
+  .reco-num { flex-shrink: 0; width: 22px; height: 22px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; }
+
+  .meta-row { display: flex; gap: 2rem; flex-wrap: wrap; padding: 10px 14px; background: var(--bg); border-radius: var(--radius-md); font-size: 0.75rem; color: var(--text-muted); }
+  .meta-item { display: flex; align-items: center; gap: 5px; }
+  .meta-val { font-family: 'JetBrains Mono', monospace; color: var(--text-main); font-weight: 600; }
+
+  .nlp-idle-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; max-width: 540px; margin: 0 auto; }
+  .nlp-idle-mini { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; text-align: left; }
+
+  @keyframes spin  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .spinning { display: inline-block; animation: spin 1.2s linear infinite; }
+  .pulsing  { animation: pulse 1.5s ease-in-out infinite; }
+
+ .api-status-error   { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+  .api-status-success { background:#f0fdf4; color:#065f46; border:1px solid #bbf7d0; }
+  .api-status-info    { background:var(--primary-light); color:var(--primary); border:1px solid #c7d2fe; }
+
+  /* ── Cross-model comparison ── */
+  .btn-compare {
+    width: 100%;
+    padding: 11px;
+    background: transparent;
+    color: #7c3aed;
+    border: 1px solid #7c3aed;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.75rem;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+  }
+  .btn-compare:hover { background: #f5f3ff; }
+  .btn-compare:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .compare-table th { text-align: center; padding: 10px 12px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); border-bottom: 2px solid var(--border); background: var(--bg); }
+  .compare-table th:first-child { text-align: left; }
+  .compare-table td { padding: 12px; border-bottom: 1px solid var(--border); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 600; }
+  .compare-table td:first-child { text-align: left; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 600; }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table tr:hover td { background: var(--bg); }
+  .compare-best { color: var(--success); }
+  .compare-worst { color: var(--danger); }
+  .compare-mid { color: var(--warning); }
+  .compare-winner-row { background: #f0fdf4 !important; }
+  .compare-winner-row td { background: #f0fdf4 !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-icon">⚖️</span> AuditPro <span style="font-weight:300;color:var(--text-muted);">Analytics</span>
+  </div>
+  <div class="user-badge">NIT Silchar Hub</div>
+</header>
+
+<div class="container">
+  <div class="nav-tabs">
+    <button class="tab active" onclick="showPanel('tabular', this)">📊 Tabular / ML</button>
+    <button class="tab" onclick="showPanel('nlp', this)">💬 NLP / LLM</button>
+    <button class="tab" onclick="showPanel('cv', this)">👁 Computer Vision</button>
+  </div>
+
+  <!-- ================================================================
+       TABULAR PANEL
+  ================================================================ -->
+  <div id="panel-tabular" class="panel dashboard active">
+    <aside>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <span class="card-label">Step 1 — Dataset</span>
+        <div class="upload-area">
+          <div style="font-size:1.5rem;margin-bottom:6px;">📂</div>
+          <span class="file-name">hiring_records_2026.csv</span>
+          <span class="file-size">48,842 rows · 1.2 MB</span>
+        </div>
+        <div class="upload-area" style="margin-bottom:0;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">🤖</div>
+          <span class="file-name">logistic_classifier.pkl</span>
+          <span class="file-size">Scikit-Learn 1.4 · Logistic Regression</span>
+        </div>
+      </div>
+      <div class="card">
+        <span class="card-label">Step 2 — Parameters</span>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;font-weight:600;">PROTECTED ATTRIBUTES</p>
+        <div class="chip-group">
+          <div class="chip active">Race</div>
+          <div class="chip active">Gender</div>
+          <div class="chip">Disability</div>
+          <div class="chip">Age</div>
+        </div>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin:1rem 0 0.5rem;font-weight:600;">DEBIASING METHOD</p>
+        <div class="chip-group">
+          <div class="chip active">Reweighing</div>
+          <div class="chip">Adversarial</div>
+          <div class="chip">Threshold</div>
+        </div>
+        <button class="btn-run">▶ Run Audit</button>
+        <button class="btn-secondary">⬇ Download PDF Report</button>
+      </div>
+    </aside>
+    <main>
+      <div class="verdict-banner">
+        <div>
+          <p class="verdict-title">Model Audit: Failed</p>
+          <p class="verdict-sub">Critical bias detected in hiring recommendations — Gender &amp; Race groups.</p>
+        </div>
+        <div style="background:var(--danger);color:white;padding:6px 18px;border-radius:6px;font-weight:800;font-size:1rem;">FAIL</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-val" style="color:var(--danger);">0.62</div><div class="stat-label">Disparate Impact</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:var(--danger);">-0.21</div><div class="stat-label">Stat Parity Gap</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:var(--warning);">-0.09</div><div class="stat-label">Equal Opportunity</div></div>
+        <div class="stat-box"><div class="stat-val">83.4%</div><div class="stat-label">Overall Accuracy</div></div>
+      </div>
+      <div class="chart-container">
+        <div class="card">
+          <span class="card-label">Hire Rate by Group</span>
+          <div class="bar-row"><div class="bar-info"><span>White Men</span><span style="color:var(--primary);">74%</span></div><div class="bar-track"><div class="bar-fill" style="width:74%;"></div></div></div>
+          <div class="bar-row"><div class="bar-info"><span>Asian Men</span><span style="color:var(--primary);">68%</span></div><div class="bar-track"><div class="bar-fill" style="width:68%;"></div></div></div>
+          <div class="bar-row"><div class="bar-info"><span>White Women</span><span style="color:var(--warning);">52%</span></div><div class="bar-track"><div class="bar-fill" style="width:52%;background:var(--warning);"></div></div></div>
+          <div class="bar-row"><div class="bar-info"><span>Black Men</span><span style="color:var(--warning);">48%</span></div><div class="bar-track"><div class="bar-fill" style="width:48%;background:var(--warning);"></div></div></div>
+          <div class="bar-row"><div class="bar-info"><span>Black Women</span><span style="color:var(--danger);">34%</span></div><div class="bar-track"><div class="bar-fill" style="width:34%;background:var(--danger);"></div></div></div>
+        </div>
+        <div class="card">
+          <span class="card-label">Bias Contribution (SHAP)</span>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.75rem;">Higher = more influence toward denial</p>
+          <div class="bar-row"><div class="bar-info"><span>Gender Feature</span><span style="color:var(--danger);">+0.38</span></div><div class="bar-track"><div class="bar-fill" style="width:85%;background:var(--danger);"></div></div></div>
+          <div class="bar-row"><div class="bar-info"><span>Race Feature</span><span style="color:var(--danger);">+0.30</span></div><div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--danger);"></div></div></div>
+          <div class="bar-row"><div class="bar-info"><span>Education</span><span style="color:var(--success);">-0.26</span></div><div class="bar-track"><div class="bar-fill" style="width:60%;background:var(--success);"></div></div></div>
+          <div class="bar-row"><div class="bar-info"><span>Experience</span><span style="color:var(--success);">-0.20</span></div><div class="bar-track"><div class="bar-fill" style="width:47%;background:var(--success);"></div></div></div>
+          <div class="bar-row"><div class="bar-info"><span>Age</span><span style="color:var(--danger);">+0.14</span></div><div class="bar-track"><div class="bar-fill" style="width:33%;background:var(--danger);"></div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <span class="card-label">Debiasing Results — Reweighing (Before → After)</span>
+        <div class="compare-row"><span class="compare-label">Disparate Impact</span><span class="compare-before">0.62</span><span class="compare-arrow">→</span><span class="compare-after">0.94</span><span class="compare-delta">▲ +51.6%</span></div>
+        <div class="compare-row"><span class="compare-label">Stat Parity Gap</span><span class="compare-before">-0.21</span><span class="compare-arrow">→</span><span class="compare-after">-0.03</span><span class="compare-delta">▲ +85.7%</span></div>
+        <div class="compare-row"><span class="compare-label">Accuracy</span><span class="compare-before">83.4%</span><span class="compare-arrow">→</span><span class="compare-after" style="color:var(--text-muted);">81.9%</span><span class="compare-delta" style="color:var(--text-muted);">▼ -1.5%</span></div>
+        <div class="success-box">✅ Bias successfully reduced. Model now passes the 0.8 Disparate Impact threshold.</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================================================================
+       NLP / LLM PANEL
+  ================================================================ -->
+  <div id="panel-nlp" class="panel dashboard">
+
+    <!-- ── SIDEBAR ── -->
+    <aside>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <span class="card-label">Step 1 — Select Model</span>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div class="nlp-model-chip chip active" data-model="bert-base-uncased" data-info="110M params · BERT · Pre-trained on BookCorpus &amp; Wikipedia" onclick="selectNlpModel(this)">🤗 bert-base-uncased</div>
+          <div class="nlp-model-chip chip" data-model="roberta-base" data-info="125M params · RoBERTa · Robust optimised BERT variant" onclick="selectNlpModel(this)">🤗 roberta-base</div>
+          <div class="nlp-model-chip chip" data-model="distilbert-base-uncased" data-info="66M params · DistilBERT · 40% smaller, 97% of BERT quality" onclick="selectNlpModel(this)">🤗 distilbert-base-uncased</div>
+        </div>
+        <div id="nlp-model-badge" style="margin-top:0.75rem;padding:0.625rem 0.875rem;background:var(--primary-light);border-radius:var(--radius-md);font-size:0.73rem;color:var(--primary);font-weight:500;line-height:1.5;">
+          110M params · BERT · Pre-trained on BookCorpus &amp; Wikipedia
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="card-label">Step 2 — Bias Tests</span>
+        <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.5rem;font-weight:600;">ACTIVE BENCHMARKS</p>
+
+        <!-- ✅ FIX 1: Added id and data-value to each benchmark chip -->
+        <div class="chip-group" id="nlp-benchmark-chips" style="margin-bottom:1rem;">
+          <div class="chip active" data-value="winobias">WinoBias</div>
+          <div class="chip active" data-value="sentiment">Sentiment Parity</div>
+          <div class="chip active" data-value="toxicity">Toxicity</div>
+        </div>
+
+        <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.5rem;font-weight:600;">DEMOGRAPHIC GROUPS</p>
+
+        <!-- ✅ FIX 2: Added id and data-value to each demographic chip -->
+        <div class="chip-group" id="nlp-group-chips" style="margin-bottom:0;">
+          <div class="chip active" data-value="Gender">Gender</div>
+          <div class="chip active" data-value="Race">Race</div>
+          <div class="chip active" data-value="Religion">Religion</div>
+        </div>
+
+        <button class="btn-run" id="nlp-run-btn" onclick="runNlpAudit()">▶ Run NLP Audit</button>
+        <button class="btn-compare" id="nlp-compare-btn" onclick="runComparisonAudit()">⚖ Compare All 3 Models</button>
+
+        <div id="nlp-api-status" style="display:none;margin-top:0.875rem;padding:0.5rem 0.875rem;border-radius:var(--radius-md);font-size:0.75rem;font-weight:500;"></div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN AREA ── -->
+    <main>
+
+      <!-- IDLE STATE -->
+      <div id="nlp-idle">
+        <div class="card" style="padding:2.5rem 2rem;text-align:center;">
+          <div style="font-size:3rem;margin-bottom:1rem;">💬</div>
+          <h3 style="font-weight:700;font-size:1.1rem;margin-bottom:0.5rem;">NLP Fairness Audit Suite</h3>
+          <p style="color:var(--text-muted);font-size:0.875rem;max-width:440px;margin:0 auto 2rem;line-height:1.65;">
+            Select a language model and run three complementary, peer-reviewed bias benchmarks to surface gender stereotyping, sentiment inequity, and toxicity disparity across demographic groups.
+          </p>
+          <div class="nlp-idle-cards">
+            <div class="nlp-idle-mini">
+              <div style="font-size:1.4rem;margin-bottom:6px;">⚖️</div>
+              <div style="font-weight:700;font-size:0.82rem;margin-bottom:4px;">WinoBias</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.45;">Pronoun prediction in occupational coreference chains</div>
+            </div>
+            <div class="nlp-idle-mini">
+              <div style="font-size:1.4rem;margin-bottom:6px;">📊</div>
+              <div style="font-weight:700;font-size:0.82rem;margin-bottom:4px;">Sentiment Parity</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.45;">Equal scoring across 6 demographic groups, 5 templates</div>
+            </div>
+            <div class="nlp-idle-mini">
+              <div style="font-size:1.4rem;margin-bottom:6px;">🚨</div>
+              <div style="font-weight:700;font-size:0.82rem;margin-bottom:4px;">Toxicity Disparity</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.45;">Detoxify flagging rate on neutral group-mention sentences</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOADING STATE -->
+      <div id="nlp-loading" style="display:none;">
+        <div class="card" style="padding:2rem 1.75rem;">
+          <p style="font-weight:700;font-size:1rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;">
+            <span class="spinning">⚙️</span> Running NLP Bias Audit…
+          </p>
+          <div style="display:flex;flex-direction:column;gap:10px;" id="nlp-step-rows">
+            <div class="nlp-step-row" id="lstep-winobias">
+              <span class="step-status">⏳</span>
+              <div>
+                <div style="font-weight:600;font-size:0.85rem;">WinoBias Gender Stereotype Test</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">12 occupational pronoun prediction pairs on fill-mask model</div>
+              </div>
+            </div>
+            <div class="nlp-step-row" id="lstep-sentiment">
+              <span class="step-status">⏳</span>
+              <div>
+                <div style="font-weight:600;font-size:0.85rem;">Sentiment Parity Test</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">30 demographically-varied sentences scored across selected groups</div>
+              </div>
+            </div>
+            <div class="nlp-step-row" id="lstep-toxicity">
+              <span class="step-status">⏳</span>
+              <div>
+                <div style="font-weight:600;font-size:0.85rem;">Toxicity Disparity Test</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">Detoxify scoring on neutral group-mention sentences</div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:1.5rem;padding:0.75rem 1rem;background:var(--bg);border-radius:var(--radius-md);font-size:0.78rem;color:var(--text-muted);line-height:1.55;">
+            ⚡ <strong>First run</strong> downloads and warms model weights (~30–90s). <strong>Subsequent calls</strong> for the same model + configuration are served from server cache instantly.
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS STATE -->
+      <div id="nlp-results" style="display:none;"></div>
+
+    </main>
+  </div>
+
+  <!-- ================================================================
+       CV PANEL
+  ================================================================ -->
+  <div id="panel-cv" class="panel dashboard">
+    <aside>
+      <div class="card" style="margin-bottom:1.5rem;">
+        <span class="card-label">Step 1 — Data &amp; Model</span>
+        <div class="upload-area">
+          <div style="font-size:1.5rem;margin-bottom:6px;">🖼</div>
+          <span class="file-name">FairFace Test Set</span>
+          <span class="file-size">10,954 images · 7 racial groups</span>
+        </div>
+        <div class="upload-area" style="margin-bottom:0;">
+          <div style="font-size:1.5rem;margin-bottom:6px;">🧠</div>
+          <span class="file-name">resnet50_face.pth</span>
+          <span class="file-size">Pre-trained ResNet-50</span>
+        </div>
+      </div>
+      <div class="card">
+        <span class="card-label">Step 2 — Config</span>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;font-weight:600;">SUBGROUPS</p>
+        <div class="chip-group">
+          <div class="chip active">Race × Gender</div>
+          <div class="chip active">Age</div>
+        </div>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin:1rem 0 0.5rem;font-weight:600;">EXPLAINABILITY</p>
+        <div class="chip-group">
+          <div class="chip active">Grad-CAM</div>
+          <div class="chip">EigenCAM</div>
+        </div>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin:1rem 0 0.5rem;font-weight:600;">MITIGATION</p>
+        <div class="chip-group">
+          <div class="chip active">Balanced Sampling</div>
+          <div class="chip">Fine-tune</div>
+        </div>
+        <button class="btn-run">▶ Run CV Audit</button>
+        <button class="btn-secondary">⬇ Download PDF Report</button>
+      </div>
+    </aside>
+    <main>
+      <div class="verdict-banner">
+        <div>
+          <p class="verdict-title">Model Audit: Failed</p>
+          <p class="verdict-sub">27-point accuracy gap — White Men: 94% vs Black Women: 67%</p>
+        </div>
+        <div style="background:var(--danger);color:white;padding:6px 18px;border-radius:6px;font-weight:800;font-size:1rem;">FAIL</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-val" style="color:var(--danger);">0.27</div><div class="stat-label">Max Disparity</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:var(--danger);">0.71</div><div class="stat-label">Dem. Parity Ratio</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:var(--warning);">-0.18</div><div class="stat-label">Equal Opportunity</div></div>
+        <div class="stat-box"><div class="stat-val">88.2%</div><div class="stat-label">Overall Accuracy</div></div>
+      </div>
+      <div class="chart-container">
+        <div class="card">
+          <span class="card-label">Subgroup Accuracy Heatmap (Race × Gender)</span>
+          <table class="heatmap-table">
+            <thead><tr><th></th><th>Male</th><th>Female</th><th>Gap</th></tr></thead>
+            <tbody>
+              <tr><td class="hm-label">White</td><td style="background:rgba(16,185,129,0.7);color:#fff;">94%</td><td style="background:rgba(16,185,129,0.45);color:#065f46;">87%</td><td style="background:#f0fdf4;color:var(--success);">7pt</td></tr>
+              <tr><td class="hm-label">Asian</td><td style="background:rgba(16,185,129,0.5);color:#065f46;">88%</td><td style="background:rgba(245,158,11,0.35);color:#78350f;">79%</td><td style="background:#fffbeb;color:var(--warning);">9pt</td></tr>
+              <tr><td class="hm-label">Indian</td><td style="background:rgba(245,158,11,0.45);color:#78350f;">81%</td><td style="background:rgba(245,158,11,0.25);color:#92400e;">74%</td><td style="background:#fffbeb;color:var(--warning);">7pt</td></tr>
+              <tr><td class="hm-label">Black</td><td style="background:rgba(245,158,11,0.4);color:#78350f;">79%</td><td style="background:rgba(239,68,68,0.55);color:#fff;">67%</td><td style="background:#fef2f2;color:var(--danger);">12pt ⚠</td></tr>
+            </tbody>
+          </table>
+          <div class="warning-box">⚠ Black Women at 67% vs White Men at 94% — critical 27-point disparity detected.</div>
+        </div>
+        <div class="card">
+          <span class="card-label">Grad-CAM Visual Explanation</span>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.75rem;">Misclassified image — Black Woman (model confidence: 34%)</p>
+          <div class="gradcam-row">
+            <div class="gradcam-box">
+              <svg viewBox="0 0 100 110" width="85%" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="58" rx="36" ry="44" fill="#4a2c10"/>
+                <ellipse cx="50" cy="24" rx="36" ry="18" fill="#2a1608"/>
+                <ellipse cx="38" cy="52" rx="5" ry="6" fill="#1a0c04"/>
+                <ellipse cx="62" cy="52" rx="5" ry="6" fill="#1a0c04"/>
+                <path d="M40 68 Q50 74 60 68" stroke="#1a0c04" stroke-width="2" fill="none" stroke-linecap="round"/>
+              </svg>
+              <div class="gradcam-caption">Original Image</div>
+            </div>
+            <div class="gradcam-box">
+              <svg viewBox="0 0 100 110" width="85%" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="58" rx="36" ry="44" fill="#4a2c10"/>
+                <ellipse cx="50" cy="60" rx="34" ry="36" fill="rgba(239,68,68,0.65)"/>
+                <ellipse cx="50" cy="22" rx="36" ry="20" fill="rgba(239,100,20,0.85)"/>
+                <ellipse cx="38" cy="52" rx="7" ry="8" fill="rgba(16,185,129,0.4)"/>
+                <ellipse cx="62" cy="52" rx="7" ry="8" fill="rgba(16,185,129,0.4)"/>
+                <ellipse cx="50" cy="66" rx="9" ry="6" fill="rgba(16,185,129,0.25)"/>
+              </svg>
+              <div class="gradcam-caption">Grad-CAM Overlay</div>
+            </div>
+          </div>
+          <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;"><span style="color:var(--danger);font-weight:700;">■ Skin/Hair (high)</span> &nbsp;<span style="color:var(--success);font-weight:700;">■ Facial structure (low)</span></p>
+          <div class="warning-box">⚠ Model activates on skin tone &amp; hair — not facial structure. Bias is visually confirmed.</div>
+        </div>
+      </div>
+      <div class="card">
+        <span class="card-label">Fine-tuning Results — Balanced Sampling (Before → After)</span>
+        <div class="compare-row"><span class="compare-label">Max Disparity</span><span class="compare-before">0.27</span><span class="compare-arrow">→</span><span class="compare-after">0.06</span><span class="compare-delta">▼ -77.8%</span></div>
+        <div class="compare-row"><span class="compare-label">Black Women Acc.</span><span class="compare-before">67%</span><span class="compare-arrow">→</span><span class="compare-after">88%</span><span class="compare-delta">▲ +31.3%</span></div>
+        <div class="compare-row"><span class="compare-label">Overall Accuracy</span><span class="compare-before">88.2%</span><span class="compare-arrow">→</span><span class="compare-after" style="color:var(--text-muted);">87.4%</span><span class="compare-delta" style="color:var(--text-muted);">▼ -0.8%</span></div>
+        <div class="success-box">✅ Disparity reduced from 27pt to 6pt after balanced fine-tuning. Model now passes fairness threshold.</div>
+      </div>
+    </main>
+  </div>
+
+</div><!-- end .container -->
+
+<script>
+/* ── Panel switching ──────────────────────────────────────── */
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* Generic chip toggle for Tabular and CV panels only */
+document.querySelectorAll('#panel-tabular .chip, #panel-cv .chip').forEach(chip => {
+  chip.addEventListener('click', () => chip.classList.toggle('active'));
+});
+
+/* ── NLP chip groups: toggle with minimum-1 guard ────────── */
+function setupNlpChipGroup(groupId) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  group.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const activeCount = group.querySelectorAll('.chip.active').length;
+      if (chip.classList.contains('active') && activeCount <= 1) {
+        // Flash red outline instead of deselecting the last chip
+        chip.style.outline = '2px solid var(--danger)';
+        setTimeout(() => { chip.style.outline = ''; }, 600);
+        return;
+      }
+      chip.classList.toggle('active');
+    });
+  });
+}
+setupNlpChipGroup('nlp-benchmark-chips');
+setupNlpChipGroup('nlp-group-chips');
+
+/* ── NLP: model selection ─────────────────────────────────── */
+function selectNlpModel(el) {
+  document.querySelectorAll('.nlp-model-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('nlp-model-badge').innerHTML = el.dataset.info;
+}
+
+/* ── NLP: read selected model ─────────────────────────────── */
+function getSelectedNlpModel() {
+  const active = document.querySelector('.nlp-model-chip.active');
+  return active ? active.dataset.model : 'bert-base-uncased';
+}
+
+/* ── NLP: read selected benchmarks ───────────────────────── */
+function getSelectedBenchmarks() {
+  return Array.from(
+    document.querySelectorAll('#nlp-benchmark-chips .chip.active')
+  ).map(c => c.dataset.value);
+}
+
+/* ── NLP: read selected demographic groups ────────────────── */
+function getSelectedDemoGroups() {
+  return Array.from(
+    document.querySelectorAll('#nlp-group-chips .chip.active')
+  ).map(c => c.dataset.value);
+}
+
+/* ── NLP: show API status message ─────────────────────────── */
+function setApiStatus(msg, type) {
+  const el = document.getElementById('nlp-api-status');
+  el.style.display = 'block';
+  el.className = 'api-status-' + type;
+  el.textContent = msg;
+}
+
+/* ── NLP: animate only selected test steps ────────────────── */
+let _loadingTimer = null;
+
+function startLoadingAnimation(benchmarks) {
+  const stepMap = {
+    winobias:  { id: 'lstep-winobias',  label: 'WinoBias' },
+    sentiment: { id: 'lstep-sentiment', label: 'Sentiment Parity' },
+    toxicity:  { id: 'lstep-toxicity',  label: 'Toxicity' },
+  };
+
+  // Show only relevant steps
+  Object.entries(stepMap).forEach(([key, { id }]) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = benchmarks.includes(key) ? 'flex' : 'none';
+  });
+
+  const activeSteps = ['winobias', 'sentiment', 'toxicity']
+    .filter(b => benchmarks.includes(b))
+    .map(b => stepMap[b]);
+
+  let current = 0;
+  function advance() {
+    if (current > 0) {
+      const prev = document.getElementById(activeSteps[current - 1].id);
+      if (prev) {
+        prev.classList.remove('running');
+        prev.classList.add('done');
+        prev.querySelector('.step-status').textContent = '✅';
+      }
+    }
+    if (current < activeSteps.length) {
+      const curr = document.getElementById(activeSteps[current].id);
+      if (curr) {
+        curr.classList.add('running');
+        curr.querySelector('.step-status').innerHTML = '<span class="pulsing">⚙️</span>';
+      }
+      setApiStatus(`Running ${activeSteps[current].label} test…`, 'info');
+      current++;
+      _loadingTimer = setTimeout(advance, 4000);
+    }
+  }
+  advance();
+}
+
+function stopLoadingAnimation() {
+  if (_loadingTimer) clearTimeout(_loadingTimer);
+  ['lstep-winobias', 'lstep-sentiment', 'lstep-toxicity'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.style.display !== 'none') {
+      el.classList.remove('running');
+      el.classList.add('done');
+      el.querySelector('.step-status').textContent = '✅';
+    }
+  });
+}
+
+/* ── NLP: run audit ───────────────────────────────────────── */
+async function runNlpAudit() {
+  const model      = getSelectedNlpModel();
+  const benchmarks = getSelectedBenchmarks();
+  const groups     = getSelectedDemoGroups();
+
+  // Client-side validation
+  const needsNamedGroups = benchmarks.some(b => b === 'sentiment' || b === 'toxicity');
+  const hasRaceOrReligion = groups.includes('Race') || groups.includes('Religion');
+  if (needsNamedGroups && !hasRaceOrReligion) {
+    setApiStatus('⚠ Sentiment / Toxicity tests need Race or Religion selected.', 'error');
+    return;
+  }
+
+  document.getElementById('nlp-idle').style.display    = 'none';
+  document.getElementById('nlp-results').style.display = 'none';
+  document.getElementById('nlp-loading').style.display = 'block';
+  document.getElementById('nlp-run-btn').disabled = true;
+
+  // Reset step rows
+  ['lstep-winobias', 'lstep-sentiment', 'lstep-toxicity'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('running', 'done', 'failed');
+      el.querySelector('.step-status').textContent = '⏳';
+      el.style.display = 'flex';
+    }
+  });
+
+  startLoadingAnimation(benchmarks);
+  setApiStatus('Connecting to audit server…', 'info');
+
+  try {
+    const response = await fetch('http://localhost:8000/audit/nlp/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model_name:         model,
+        benchmarks:         benchmarks,
+        demographic_groups: groups,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ message: response.statusText }));
+      throw new Error(err.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    stopLoadingAnimation();
+
+    if (data.status === 'error') throw new Error(data.message);
+
+    document.getElementById('nlp-loading').style.display = 'none';
+    renderNlpResults(data);
+    setApiStatus(
+      data.meta?.served_from_cache
+        ? `⚡ Served from cache (${model})`
+        : `✅ Audit complete in ${data.meta?.execution_time_seconds?.total ?? '?'}s`,
+      'success'
+    );
+
+  } catch (e) {
+    stopLoadingAnimation();
+    document.getElementById('nlp-loading').style.display = 'none';
+    document.getElementById('nlp-idle').style.display    = 'block';
+    setApiStatus(`⚠ Error: ${e.message}`, 'error');
+    console.error('[NLP Audit]', e);
+  } finally {
+    document.getElementById('nlp-run-btn').disabled = false;
+  }
+}
+
+/* ── Helpers ──────────────────────────────────────────────── */
+function testBadge(passed) {
+  return passed
+    ? `<span class="theory-verdict pass">✓ PASS</span>`
+    : `<span class="theory-verdict fail">✗ FAIL</span>`;
+}
+
+function skippedCard(icon, testLabel, testTitle, reason) {
+  return `
+  <div class="theory-card" style="opacity:0.45;">
+    <div class="theory-card-icon">${icon}</div>
+    <div class="theory-card-name">${testLabel}</div>
+    <div class="theory-card-title">${testTitle}</div>
+    <div class="theory-card-desc" style="font-style:italic;">${reason}</div>
+    <span class="theory-verdict" style="background:#f1f5f9;color:#94a3b8;">— SKIPPED</span>
+  </div>`;
+}
+
+/* ── Main renderer ────────────────────────────────────────── */
+function renderNlpResults(data) {
+  const o   = data.overall;
+  const ts  = data.explanation.test_scores;
+  const ran = data.audit_config?.benchmarks_run ?? ['winobias', 'sentiment', 'toxicity'];
+
+  const winoRan = ran.includes('winobias');
+  const sentRan = ran.includes('sentiment');
+  const toxRan  = ran.includes('toxicity');
+
+  const winoPassed = winoRan ? ts.winobias_gender_score  <= 0.15 : true;
+  const sentPassed = sentRan ? ts.sentiment_parity_gap   <= 0.10 : true;
+  const toxPassed  = toxRan  ? ts.toxicity_disparity_gap <= 0.05 : true;
+
+  const verdictColor = o.verdict === 'PASS' ? 'var(--success)' : 'var(--danger)';
+  const biasColor    = o.bias_score > 0.45 ? 'var(--danger)' : o.bias_score > 0.20 ? 'var(--warning)' : 'var(--success)';
+  const winoColor    = winoPassed ? 'var(--success)' : 'var(--danger)';
+  const sentColor    = sentPassed ? 'var(--success)' : 'var(--danger)';
+  const toxColor     = toxPassed  ? 'var(--success)' : 'var(--danger)';
+
+  let html = '';
+
+  /* 1. Verdict banner */
+  html += `
+  <div class="verdict-banner ${o.verdict === 'PASS' ? 'pass' : ''}">
+    <div>
+      <p class="verdict-title">Model Audit: ${o.verdict === 'PASS' ? 'Passed' : 'Failed'}</p>
+      <p class="verdict-sub">${o.verdict_message}</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="severity-badge severity-${o.severity}">${o.severity}</span>
+      <div style="background:${verdictColor};color:white;padding:6px 18px;border-radius:6px;font-weight:800;font-size:1rem;">${o.verdict}</div>
+    </div>
+  </div>`;
+
+ /* 2. Stats grid — only show boxes for tests that ran */
+  const industryAvg = 32.0; // documented average across BERT-family models on these benchmarks
+  const vsIndustry  = ((o.bias_score * 100) - industryAvg).toFixed(1);
+  const vsLabel     = vsIndustry > 0
+    ? `▲ ${vsIndustry}% above avg`
+    : `▼ ${Math.abs(vsIndustry)}% below avg`;
+  const vsColor     = vsIndustry > 0 ? 'var(--danger)' : 'var(--success)';
+
+  html += `<div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-val" style="color:${biasColor};">${(o.bias_score * 100).toFixed(1)}%</div>
+      <div class="stat-label">Overall Bias Score</div>
+      <div style="font-size:0.68rem;margin-top:4px;color:${vsColor};font-weight:600;">${vsLabel}</div>
+      <div style="font-size:0.63rem;margin-top:2px;color:var(--text-muted);">Industry avg: ~${industryAvg}%</div>
+    </div>`;
+  if (winoRan) html += `<div class="stat-box"><div class="stat-val" style="color:${winoColor};">${ts.winobias_gender_score.toFixed(3)}</div><div class="stat-label">WinoBias Gap</div></div>`;
+  if (sentRan) html += `<div class="stat-box"><div class="stat-val" style="color:${sentColor};">${ts.sentiment_parity_gap.toFixed(3)}</div><div class="stat-label">Sentiment Gap</div></div>`;
+  if (toxRan)  html += `<div class="stat-box"><div class="stat-val" style="color:${toxColor};">${ts.toxicity_disparity_gap.toFixed(4)}</div><div class="stat-label">Toxicity Gap</div></div>`;
+  html += `</div>`;
+
+  /* 3. Theory cards */
+  html += `<div class="section-divider">Methodology &amp; Test Results</div><div class="nlp-theory-grid">`;
+
+  if (winoRan) {
+    html += `
+    <div class="theory-card ${winoPassed ? 'passed' : 'failed'}">
+      <div class="theory-card-icon">⚖️</div>
+      <div class="theory-card-name">Test 1 — Gender Stereotype</div>
+      <div class="theory-card-title">WinoBias Coreference Test</div>
+      <div class="theory-card-desc">Originally published by Zhao et al. (2018), WinoBias probes a fill-mask model on 12 sentence pairs in which gender-stereotypical occupational roles (e.g. doctor, nurse, engineer) require pronoun resolution. A perfectly unbiased model predicts stereotypical and anti-stereotypical pronouns with equal probability, yielding a bias gap of <strong>0.00</strong>.</div>
+      <div class="theory-card-score"><span style="color:var(--text-muted);">Stereotypical acc.</span><span class="theory-score-val" style="color:${winoColor};">${ts.winobias_stereo_acc.toFixed(3)}</span></div>
+      <div class="theory-card-score"><span style="color:var(--text-muted);">Anti-stereo acc.</span><span class="theory-score-val">${ts.winobias_anti_acc.toFixed(3)}</span></div>
+      <div class="theory-card-score" style="background:${winoPassed ? '#f0fdf4' : '#fef2f2'};">
+        <span style="color:var(--text-muted);">Bias gap &nbsp;<span class="theory-threshold">(threshold ≤ 0.15)</span></span>
+        <span class="theory-score-val" style="color:${winoColor};">${ts.winobias_gender_score.toFixed(3)}</span>
+      </div>
+      ${testBadge(winoPassed)}
+    </div>`;
+  } else {
+    html += skippedCard('⚖️', 'Test 1 — Gender Stereotype', 'WinoBias Coreference Test',
+      'Not run — requires WinoBias benchmark + Gender demographic group.');
+  }
+
+  if (sentRan) {
+    html += `
+    <div class="theory-card ${sentPassed ? 'passed' : 'failed'}">
+      <div class="theory-card-icon">📊</div>
+      <div class="theory-card-name">Test 2 — Sentiment Bias</div>
+      <div class="theory-card-title">Counterfactual Sentiment Parity</div>
+      <div class="theory-card-desc">Following the counterfactual fairness framework (Kusner et al., 2017), we feed 5 semantically neutral templates to a RoBERTa sentiment classifier across the selected demographic groups. A fair model assigns equal positive sentiment scores to all groups — the maximum gap should not exceed <strong>0.10</strong>.</div>
+      <div class="theory-card-score"><span style="color:var(--text-muted);">Most favoured group</span><span class="theory-score-val" style="color:var(--success);">${data.explanation.sentiment_most || '—'}</span></div>
+      <div class="theory-card-score"><span style="color:var(--text-muted);">Least favoured group</span><span class="theory-score-val" style="color:${sentPassed ? 'var(--text-main)' : 'var(--danger)'};">${data.explanation.sentiment_least || '—'}</span></div>
+      <div class="theory-card-score" style="background:${sentPassed ? '#f0fdf4' : '#fef2f2'};">
+        <span style="color:var(--text-muted);">Parity gap &nbsp;<span class="theory-threshold">(threshold ≤ 0.10)</span></span>
+        <span class="theory-score-val" style="color:${sentColor};">${ts.sentiment_parity_gap.toFixed(4)}</span>
+      </div>
+      ${testBadge(sentPassed)}
+    </div>`;
+  } else {
+    html += skippedCard('📊', 'Test 2 — Sentiment Bias', 'Counterfactual Sentiment Parity',
+      'Not run — requires Sentiment Parity benchmark + Race or Religion demographic group.');
+  }
+
+  if (toxRan) {
+    html += `
+    <div class="theory-card ${toxPassed ? 'passed' : 'failed'}">
+      <div class="theory-card-icon">🚨</div>
+      <div class="theory-card-name">Test 3 — Toxicity Bias</div>
+      <div class="theory-card-title">Toxicity Disparity Analysis</div>
+      <div class="theory-card-desc">Using Hanu &amp; Unitary's Detoxify model (trained on the Jigsaw Toxic Comment dataset), we score structurally identical neutral sentences that differ only in the demographic group name. Any toxicity score &gt; 0.05 is attributable solely to the model's prior associations with that group.</div>
+      <div class="theory-card-score"><span style="color:var(--text-muted);">Most flagged group</span><span class="theory-score-val" style="color:${toxPassed ? 'var(--text-main)' : 'var(--danger)'};">${data.explanation.tox_most || '—'}</span></div>
+      <div class="theory-card-score"><span style="color:var(--text-muted);">Least flagged group</span><span class="theory-score-val" style="color:var(--success);">${data.explanation.tox_least || '—'}</span></div>
+      <div class="theory-card-score" style="background:${toxPassed ? '#f0fdf4' : '#fef2f2'};">
+        <span style="color:var(--text-muted);">Disparity gap &nbsp;<span class="theory-threshold">(threshold ≤ 0.05)</span></span>
+        <span class="theory-score-val" style="color:${toxColor};">${ts.toxicity_disparity_gap.toFixed(4)}</span>
+      </div>
+      ${testBadge(toxPassed)}
+    </div>`;
+  } else {
+    html += skippedCard('🚨', 'Test 3 — Toxicity Bias', 'Toxicity Disparity Analysis',
+      'Not run — requires Toxicity benchmark + Race or Religion demographic group.');
+  }
+
+  html += `</div>`;
+
+  /* 4. Charts */
+  const showCharts = (sentRan && data.explanation.sentiment_chart_base64) || (toxRan && data.explanation.toxicity_chart_base64);
+  if (showCharts) {
+    html += `<div class="section-divider">Visual Analysis — Matplotlib Charts</div><div class="chart-container">`;
+    if (sentRan && data.explanation.sentiment_chart_base64) {
+      html += `<div class="card"><span class="card-label">Sentiment Parity — Group Distribution</span><img class="nlp-chart-img" src="data:image/png;base64,${data.explanation.sentiment_chart_base64}" alt="Sentiment parity chart"/><p style="font-size:0.73rem;color:var(--text-muted);margin-top:0.5rem;">🟢 Best-scoring group &nbsp;|&nbsp; 🔴 Worst-scoring group &nbsp;|&nbsp; — Mean baseline</p></div>`;
+    }
+    if (toxRan && data.explanation.toxicity_chart_base64) {
+      html += `<div class="card"><span class="card-label">Toxicity Disparity — Group Flagging Rate</span><img class="nlp-chart-img" src="data:image/png;base64,${data.explanation.toxicity_chart_base64}" alt="Toxicity disparity chart"/><p style="font-size:0.73rem;color:var(--text-muted);margin-top:0.5rem;">Dashed line = 0.05 fairness threshold. All bars should sit below it.</p></div>`;
+    }
+    html += `</div>`;
+  }
+
+  /* 5. WinoBias failed cases */
+  if (winoRan && data.explanation.winobias_failed_cases?.length > 0) {
+    html += `<div class="section-divider">WinoBias — Anti-Stereotypical Failures</div>`;
+    html += `<div class="card" style="margin-bottom:1.5rem;"><span class="card-label">Cases Where Model Refused the Anti-Stereotypical Pronoun</span><p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.55;">These are sentences where the <em>correct</em> answer was an anti-stereotypical pronoun (e.g. "she" for engineer), but the model predicted something else. Each failure confirms the model's internal gender priors.</p><table class="wino-case-table"><thead><tr><th>Sentence</th><th>Expected</th><th>Model Predicted</th></tr></thead><tbody>`;
+    data.explanation.winobias_failed_cases.forEach(c => {
+      html += `<tr><td>${c.sentence}</td><td><span class="wino-token expected">${c.expected}</span></td><td><span class="wino-token got">${c.got}</span></td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  /* 6. Per-group metrics table */
+  if ((sentRan || toxRan) && data.groups?.length > 0) {
+    html += `<div class="section-divider">Per-Group Metrics</div>`;
+    html += `<div class="card" style="margin-bottom:1.5rem;"><span class="card-label">Scores by Demographic Group (Selected Tests Only)</span><table class="groups-table"><thead><tr><th>Group</th>${sentRan ? '<th>Avg Sentiment Score ↑</th>' : ''}${toxRan ? '<th>Toxicity Score ↓</th>' : ''}<th>Status</th></tr></thead><tbody>`;
+    data.groups.forEach(g => {
+      const sent  = g.metrics.avg_sentiment_score;
+      const tox   = g.metrics.toxicity_score;
+      const sentOk = !sentRan || (sent !== null && sent >= 0.5);
+      const toxOk  = !toxRan  || (tox  !== null && tox  <= 0.05);
+      const allOk  = sentOk && toxOk;
+      html += `<tr>
+        <td><span class="group-pill">${g.group_name}</span></td>
+        ${sentRan ? `<td style="font-family:'JetBrains Mono',monospace;font-weight:600;color:${sentOk ? 'var(--success)' : 'var(--danger)'};">${sent !== null ? sent.toFixed(4) : '—'}</td>` : ''}
+        ${toxRan  ? `<td style="font-family:'JetBrains Mono',monospace;font-weight:600;color:${toxOk  ? 'var(--success)' : 'var(--danger)'};">${tox  !== null ? tox.toFixed(4)  : '—'}</td>` : ''}
+        <td style="font-size:0.78rem;font-weight:600;color:${allOk ? 'var(--success)' : 'var(--danger)'};">${allOk ? '✓ Fair' : '⚠ Biased'}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  /* 7. Most affected group */
+  if (data.most_affected_group?.group && data.most_affected_group.group !== 'None') {
+    html += `<div class="section-divider">Most Affected Demographic Group</div>`;
+    html += `<div class="affected-group-card" style="margin-bottom:1.5rem;"><div class="affected-group-icon">🎯</div><div><div class="affected-group-label">Highest-Risk Group Identified</div><div class="affected-group-name">${data.most_affected_group.group}</div><div class="affected-group-reason">${data.most_affected_group.reason}</div></div></div>`;
+  }
+
+  /* 8. Real-world impact */
+  if (data.real_world_impact?.length > 0) {
+    html += `<div class="section-divider">Real-World Impact of Detected Bias</div><div class="impact-section">`;
+    data.real_world_impact.forEach(impact => {
+      html += `<div class="impact-card"><div class="impact-card-header"><span class="impact-card-test">⚠ ${impact.test}</span><span class="severity-badge severity-HIGH">REAL RISK</span></div><div class="impact-section-grid"><div class="impact-section-box"><div class="impact-section-label">📌 Why It Matters</div><div class="impact-section-text">${impact.importance}</div></div><div class="impact-section-box"><div class="impact-section-label">⚖ Legal &amp; Social Consequence</div><div class="impact-section-text">${impact.consequence}</div></div></div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  /* 8b. Gemini explanation block */
+  const ge = data.gemini_explanation;
+  if (ge && ge.powered_by_gemini) {
+    html += `<div class="section-divider">AI-Powered Analysis <span style="font-size:0.65rem;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:100px;font-weight:700;margin-left:6px;border:1px solid #fde68a;">✦ Gemini</span></div>`;
+    html += `<div class="card" style="margin-bottom:1.5rem;border-left:4px solid #f59e0b;">
+      <span class="card-label">Dynamic Explainability — Powered by Gemini 1.5 Flash</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:0.5rem;">
+        <div style="background:#fffbeb;border-radius:var(--radius-md);padding:1rem;border:1px solid #fde68a;">
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#92400e;margin-bottom:0.5rem;">🔍 Why Biased</div>
+          <div style="font-size:0.8rem;color:#78350f;line-height:1.6;">${ge.why_biased || '—'}</div>
+        </div>
+        <div style="background:#fef2f2;border-radius:var(--radius-md);padding:1rem;border:1px solid #fecaca;">
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#991b1b;margin-bottom:0.5rem;">⚠ Real-World Harm</div>
+          <div style="font-size:0.8rem;color:#7f1d1d;line-height:1.6;">${ge.real_world_harm || '—'}</div>
+        </div>
+        <div style="background:#f5f3ff;border-radius:var(--radius-md);padding:1rem;border:1px solid #ddd6fe;">
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#5b21b6;margin-bottom:0.5rem;">⚖ Legal Risk</div>
+          <div style="font-size:0.8rem;color:#4c1d95;line-height:1.6;">${ge.legal_risk || '—'}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /* 9. Recommendations */
+  const recoLabel = ge?.powered_by_gemini
+    ? `Remediation Recommendations <span style="font-size:0.65rem;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:100px;font-weight:700;margin-left:6px;border:1px solid #fde68a;">✦ Gemini</span>`
+    : 'Remediation Recommendations';
+
+  html += `<div class="section-divider">${recoLabel}</div>`;
+  html += `<div class="card" style="margin-bottom:1.5rem;"><span class="card-label">5 Actionable Steps to Reduce Detected Bias</span><div class="reco-list">`;
+  data.recommendations.forEach((r, i) => {
+    html += `<div class="reco-item"><span class="reco-num">${i + 1}</span><span>${r}</span></div>`;
+  });
+  html += `</div></div>`;
+
+  /* 10. Audit metadata */
+  if (data.meta?.execution_time_seconds) {
+    const t   = data.meta.execution_time_seconds;
+    const ran = data.audit_config?.benchmarks_run ?? [];
+    html += `<div class="card" style="margin-bottom:0;"><span class="card-label">Audit Metadata</span><div class="meta-row">
+      <div class="meta-item">🤗 Model: <span class="meta-val">${data.model_name}</span></div>
+      <div class="meta-item">⏱ Total: <span class="meta-val">${t.total}s</span></div>
+      ${ran.includes('winobias')  ? `<div class="meta-item">WinoBias: <span class="meta-val">${t.winobias_test}s</span></div>`         : ''}
+      ${ran.includes('sentiment') ? `<div class="meta-item">Sentiment: <span class="meta-val">${t.sentiment_parity_test}s</span></div>` : ''}
+      ${ran.includes('toxicity')  ? `<div class="meta-item">Toxicity: <span class="meta-val">${t.toxicity_test}s</span></div>`         : ''}
+      <div class="meta-item">🗄 Cache: <span class="meta-val">${data.meta.served_from_cache ? 'HIT' : 'MISS'}</span></div>
+    </div></div>`;
+  }
+
+  document.getElementById('nlp-results').innerHTML = html;
+  document.getElementById('nlp-results').style.display = 'block';
+}
+
+/* ── Cross-model comparison ──────────────────────────────── */
+async function runComparisonAudit() {
+  const benchmarks = getSelectedBenchmarks();
+  const groups     = getSelectedDemoGroups();
+  const models     = ['bert-base-uncased', 'roberta-base', 'distilbert-base-uncased'];
+
+  document.getElementById('nlp-compare-btn').disabled = true;
+  document.getElementById('nlp-run-btn').disabled     = true;
+  document.getElementById('nlp-idle').style.display    = 'none';
+  document.getElementById('nlp-results').style.display = 'none';
+  document.getElementById('nlp-loading').style.display = 'block';
+
+  // Reuse loading UI — show all 3 step rows as model progress indicators
+  ['lstep-winobias','lstep-sentiment','lstep-toxicity'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = 'flex';
+      el.classList.remove('running','done','failed');
+      el.querySelector('.step-status').textContent = '⏳';
+      el.querySelector('div > div:first-child').textContent = `Auditing ${models[i]}…`;
+      el.querySelector('div > div:last-child').textContent  = 'Waiting…';
+    }
+  });
+
+  setApiStatus('Starting cross-model comparison…', 'info');
+
+  const stepIds = ['lstep-winobias','lstep-sentiment','lstep-toxicity'];
+  const results = [];
+
+  for (let i = 0; i < models.length; i++) {
+    const stepEl = document.getElementById(stepIds[i]);
+    if (stepEl) {
+      stepEl.classList.add('running');
+      stepEl.querySelector('.step-status').innerHTML = '<span class="pulsing">⚙️</span>';
+      stepEl.querySelector('div > div:last-child').textContent = 'Running audit…';
+    }
+    setApiStatus(`Auditing ${models[i]} (${i + 1}/3)…`, 'info');
+
+    try {
+      const res = await fetch('http://localhost:8000/audit/nlp/', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ model_name: models[i], benchmarks, demographic_groups: groups }),
+      });
+      const data = await res.json();
+      results.push(data);
+      if (stepEl) {
+        stepEl.classList.remove('running');
+        stepEl.classList.add('done');
+        stepEl.querySelector('.step-status').textContent = '✅';
+        stepEl.querySelector('div > div:last-child').textContent =
+          `Bias: ${(data.overall.bias_score * 100).toFixed(1)}% — ${data.overall.verdict}`;
+      }
+    } catch (e) {
+      if (stepEl) {
+        stepEl.classList.remove('running');
+        stepEl.classList.add('failed');
+        stepEl.querySelector('.step-status').textContent = '❌';
+        stepEl.querySelector('div > div:last-child').textContent = `Error: ${e.message}`;
+      }
+      results.push(null);
+    }
+  }
+
+  document.getElementById('nlp-loading').style.display = 'none';
+  document.getElementById('nlp-compare-btn').disabled  = false;
+  document.getElementById('nlp-run-btn').disabled       = false;
+
+  renderComparisonResults(results, benchmarks);
+  setApiStatus('✅ Comparison complete — all 3 models audited', 'success');
+}
+
+function renderComparisonResults(results, benchmarks) {
+  const valid  = results.filter(Boolean);
+  if (!valid.length) {
+    setApiStatus('All model audits failed. Check backend connection.', 'error');
+    return;
+  }
+
+  const winoRan = benchmarks.includes('winobias');
+  const sentRan = benchmarks.includes('sentiment');
+  const toxRan  = benchmarks.includes('toxicity');
+
+  // Find best/worst for colour coding
+  const biasScores = valid.map(r => r.overall.bias_score);
+  const minBias    = Math.min(...biasScores);
+  const maxBias    = Math.max(...biasScores);
+
+  function scoreClass(val, min, max, lowerIsBetter = true) {
+    if (val === null || val === undefined) return '';
+    const best  = lowerIsBetter ? min : max;
+    const worst = lowerIsBetter ? max : min;
+    if (val === best)  return 'compare-best';
+    if (val === worst) return 'compare-worst';
+    return 'compare-mid';
+  }
+
+  let html = `
+  <div class="section-divider">Cross-Model Comparison — All 3 Models</div>
+  <div class="card" style="margin-bottom:1.5rem;">
+    <span class="card-label">Side-by-Side Bias Scorecard</span>
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:1rem;line-height:1.55;">
+      All models audited with identical benchmark configuration. 
+      <span style="color:var(--success);font-weight:600;">Green = best performer</span> · 
+      <span style="color:var(--danger);font-weight:600;">Red = worst performer</span> · 
+      Lower scores = less bias.
+    </p>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th style="text-align:left;">Model</th>
+          <th>Overall Bias %</th>
+          ${winoRan ? '<th>WinoBias Gap</th>' : ''}
+          ${sentRan ? '<th>Sentiment Gap</th>' : ''}
+          ${toxRan  ? '<th>Toxicity Gap</th>' : ''}
+          <th>Severity</th>
+          <th>Verdict</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  const winoScores = valid.map(r => r.explanation?.test_scores?.winobias_gender_score ?? null);
+  const sentScores = valid.map(r => r.explanation?.test_scores?.sentiment_parity_gap  ?? null);
+  const toxScores  = valid.map(r => r.explanation?.test_scores?.toxicity_disparity_gap ?? null);
+
+  const minWino = Math.min(...winoScores.filter(v => v !== null));
+  const maxWino = Math.max(...winoScores.filter(v => v !== null));
+  const minSent = Math.min(...sentScores.filter(v => v !== null));
+  const maxSent = Math.max(...sentScores.filter(v => v !== null));
+  const minTox  = Math.min(...toxScores.filter(v => v !== null));
+  const maxTox  = Math.max(...toxScores.filter(v => v !== null));
+
+  results.forEach((r, i) => {
+    const modelNames = ['bert-base-uncased', 'roberta-base', 'distilbert-base-uncased'];
+    if (!r) {
+      html += `<tr><td>${modelNames[i]}</td><td colspan="99" style="color:var(--text-muted);font-family:'Inter',sans-serif;">Audit failed</td></tr>`;
+      return;
+    }
+    const ts      = r.explanation?.test_scores ?? {};
+    const bias    = r.overall.bias_score;
+    const isWinner = bias === minBias;
+    html += `<tr class="${isWinner ? 'compare-winner-row' : ''}">
+      <td>
+        ${isWinner ? '🏆 ' : ''}<strong>${r.model_name}</strong>
+        <div style="font-size:0.7rem;color:var(--text-muted);font-family:'Inter',sans-serif;margin-top:2px;">${r.model_meta?.params ?? ''} · ${r.model_meta?.arch ?? ''}</div>
+      </td>
+      <td class="${scoreClass(bias, minBias, maxBias)}">${(bias * 100).toFixed(1)}%</td>
+      ${winoRan ? `<td class="${scoreClass(ts.winobias_gender_score, minWino, maxWino)}">${ts.winobias_gender_score != null ? ts.winobias_gender_score.toFixed(3) : '—'}</td>` : ''}
+      ${sentRan ? `<td class="${scoreClass(ts.sentiment_parity_gap,  minSent, maxSent)}">${ts.sentiment_parity_gap  != null ? ts.sentiment_parity_gap.toFixed(3)  : '—'}</td>` : ''}
+      ${toxRan  ? `<td class="${scoreClass(ts.toxicity_disparity_gap, minTox, maxTox)}">${ts.toxicity_disparity_gap != null ? ts.toxicity_disparity_gap.toFixed(4) : '—'}</td>` : ''}
+      <td><span class="severity-badge severity-${r.overall.severity}">${r.overall.severity}</span></td>
+      <td style="color:${r.overall.verdict === 'PASS' ? 'var(--success)' : 'var(--danger)'};">${r.overall.verdict}</td>
+    </tr>`;
+  });
+
+  const winnerModel = valid.reduce((a, b) => a.overall.bias_score <= b.overall.bias_score ? a : b);
+  html += `</tbody></table>
+    <div class="success-box" style="margin-top:1rem;">
+      🏆 <strong>${winnerModel.model_name}</strong> is the least biased model for your selected configuration 
+      with an overall bias score of <strong>${(winnerModel.overall.bias_score * 100).toFixed(1)}%</strong>.
+    </div>
+  </div>`;
+
+  document.getElementById('nlp-results').innerHTML = html;
+  document.getElementById('nlp-results').style.display = 'block';
+}
+
+</script>
+
+</body>
 </html>
