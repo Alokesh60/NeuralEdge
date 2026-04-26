@@ -1698,7 +1698,7 @@ def explain_shap(target_col: str, sensitive_cols: List[str], sample_size: Option
     }
 
 # -------------------- Main audit function --------------------
-async def run_tabular_audit(file, target_col: str, sensitive_cols: List[str], privileged_groups: Dict[str, Any],
+def run_tabular_audit(file, target_col: str, sensitive_cols: List[str], privileged_groups: Dict[str, Any],
                             model_choice: str = "logistic", model_file: Optional[Any] = None,
                             preprocessor_file: Optional[Any] = None,
                             shap_sample_size: Optional[int] = None) -> Dict[str, Any]:
