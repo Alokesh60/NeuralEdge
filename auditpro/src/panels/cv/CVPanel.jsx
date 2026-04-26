@@ -20,7 +20,7 @@ const CVPanel = () => {
     setFile(file);
     setFileName(file.name);
     setPreview(URL.createObjectURL(file));
-    setData(null); // Clear previous results on new upload
+    setData(null);
   };
 
   const handleScan = async () => {
@@ -31,23 +31,20 @@ const CVPanel = () => {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("view", "json");
 
     setLoading(true);
     setData(null);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/audit/cv/", {
+      const res = await fetch("http://127.0.0.1:8000/audit/cv", {
         method: "POST",
         body: formData,
       });
 
       const result = await res.json();
-      if (!res.ok) {
-        throw new Error("API failed");
-      }
+      if (!res.ok) throw new Error("API failed");
 
-      console.log(result);
+      console.log("API RESPONSE:", result);
       setData(result);
     } catch (err) {
       console.error(err);
@@ -56,6 +53,15 @@ const CVPanel = () => {
 
     setLoading(false);
   };
+
+  // 🔥 Derived values (clean logic)
+  const confidence = (Number(data?.confidence) || 0) * 100;
+  const riskScore = Number(data?.bias_assessment?.risk_score) || 0;
+  const risk = data?.bias_assessment?.bias_risk;
+
+  const heatmapSrc = data?.heatmap_base64
+    ? `data:image/jpeg;base64,${data.heatmap_base64}`
+    : null;
 
   return (
     <div className="panel dashboard active">
@@ -138,6 +144,7 @@ const CVPanel = () => {
         <p style={{ color: "#64748b", marginBottom: "20px" }}>
           AI-driven fairness evaluation of computer vision model
         </p>
+
         {/* BEFORE UPLOAD */}
         {!data && !loading && (
           <div
@@ -145,16 +152,10 @@ const CVPanel = () => {
             style={{ textAlign: "center", padding: "40px" }}
           >
             <h3>👁 AI-Powered CV Bias Scanner</h3>
-
             <p style={{ color: "#64748b", marginTop: "10px" }}>
               Upload an image to analyze prediction, bias risk, and model
               attention.
             </p>
-
-            <div style={{ marginTop: "20px", fontSize: "14px" }}>
-              ✔ AI Prediction <br />
-              ✔ Bias Detection <br />✔ Grad-CAM Visualization
-            </div>
           </div>
         )}
 
@@ -171,52 +172,40 @@ const CVPanel = () => {
         {/* RESULTS */}
         {!loading && data && (
           <div className="animate-in results-grid">
-            {/* Prediction */}
+            {/* Bias Risk */}
             <div className="card premium-card prediction-card">
-              <span className="card-label">Prediction</span>
+              <span className="card-label">Bias Risk</span>
 
               <div className="flex-between">
-                <h2 className="verdict-text">{data.overall?.verdict}</h2>
+                <h2 className="verdict-text">{risk?.toUpperCase()}</h2>
 
                 <span
-                  className={`badge pulse-badge verdict-${
-                    data.overall?.verdict === "FAIL" ? "fail" : "pass"
+                  className={`badge verdict-${
+                    risk === "high" ? "fail" : "pass"
                   }`}
                 >
-                  {data.overall?.verdict}
+                  {risk?.toUpperCase()}
                 </span>
               </div>
 
               <p className="metric">
-                Accuracy:{" "}
-                <strong>{`${(Number(data.overall?.accuracy) || 0) * (100).toFixed(2) ?? "0.00"}%`}</strong>
+                Confidence: <strong>{confidence.toFixed(2)}%</strong>
               </p>
 
-              {/* Animated progress */}
               <div className="progress">
                 <div
                   className="progress-fill accuracy"
-                  style={{
-                    width: `${Math.min(Math.max((Number(data.overall?.accuracy) || 0) * 100, 0), 100)}%`,
-                  }}
+                  style={{ width: `${confidence}%` }}
                 ></div>
               </div>
             </div>
 
-            {/* Probabilities */}
-
-            {/* Bias */}
+            {/* Bias Score */}
             <div className="card premium-card bias-card">
               <span className="card-label">Bias Analysis</span>
 
-              <p className="bias-note">
-                Bias level indicator (higher = more unfair)
-              </p>
-
               <div className="bias-container">
-                <div className="bias-score">
-                  {Number(data.overall?.bias_score) ?? 0}
-                </div>
+                <div className="bias-score">{riskScore}</div>
 
                 <div className="bias-meta">
                   <p className="metric-label">Bias Score</p>
@@ -224,31 +213,27 @@ const CVPanel = () => {
                 </div>
               </div>
 
-              {/* Bias meter */}
               <div className="progress">
                 <div
                   className="progress-fill bias"
-                  style={{
-                    width: `${Math.min(Math.max((Number(data.overall?.bias_score) || 0) * 100, 0), 100)}%`,
-                  }}
+                  style={{ width: `${riskScore * 100}%` }}
                 ></div>
               </div>
             </div>
 
+            {/* AI Insight */}
             <div className="card insight-box">
               <span className="card-label">💡 AI Insight</span>
 
               <p className="insight-text">
-                The model shows{" "}
-                <strong>{Number(data.overall?.bias_score) ?? 0}</strong> bias
-                score, indicating potential unfairness across demographic
-                groups.
+                The model shows <strong>{riskScore}</strong> bias score,
+                indicating potential unfairness.
               </p>
 
               <p className="recommendation">
                 Recommendation:{" "}
                 <span className="recommendation-highlight">
-                  {data.recommendations?.[0] || "Improve dataset balance"}
+                  {data.bias_assessment?.recommendation}
                 </span>
               </p>
             </div>
@@ -260,22 +245,22 @@ const CVPanel = () => {
               <div className="image-grid">
                 <div>
                   <p className="img-label">Original</p>
-                  <img src={preview} alt="Uploaded CV" className="img-box" />
+                  <img src={preview} className="img-box" alt="Original" />
                 </div>
 
                 <div>
                   <p className="img-label">Grad-CAM</p>
-                  {data.explanation?.image_base64 ? (
+
+                  {heatmapSrc ? (
                     <img
-                      src={`data:image/png;base64,${data.explanation.image_base64}`}
-                      className="img-box"
+                      src={heatmapSrc}
+                      className="img-box clickable"
+                      alt="Heatmap"
                     />
                   ) : (
                     <div className="no-heatmap-box">
                       <h4>⚠️ Grad-CAM not generated</h4>
-                      <p className="sub">
-                        Explanation model not enabled in this demo
-                      </p>
+                      <p className="sub">Backend did not return heatmap</p>
                     </div>
                   )}
                 </div>
