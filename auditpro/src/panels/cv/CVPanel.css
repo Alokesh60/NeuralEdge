@@ -1,0 +1,239 @@
+:root {
+  --card-bg: #ffffff;
+  --muted: #64748b;
+  --accent: #6366f1;
+  --success: #10b981;
+  --danger: #ef4444;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+}
+
+.animate-in .card {
+  animation: fadeInUp 420ms ease both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.verdict-text {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.pulse-badge {
+  animation: subtlePulse 1300ms ease-in-out infinite;
+}
+
+@keyframes subtlePulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.07);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+
+.verdict-pass {
+  background: linear-gradient(
+    90deg,
+    rgba(220, 252, 231, 1) 0%,
+    rgba(236, 253, 245, 1) 100%
+  );
+  color: #065f46;
+}
+
+.verdict-fail {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 235, 238, 1) 0%,
+    rgba(255, 244, 245, 1) 100%
+  );
+  color: #991b1b;
+}
+
+/* Progress bars */
+.progress {
+  height: 12px;
+  background: linear-gradient(180deg, #f3f4f6, #f8fafc);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  transition: width 900ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.12) inset;
+}
+
+.progress-fill.accuracy {
+  background: linear-gradient(90deg, #6366f1 0%, #06b6d4 100%);
+  box-shadow: 0 8px 30px rgba(6, 182, 212, 0.12);
+}
+
+.progress-fill.bias {
+  background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.12);
+}
+
+.prediction-card .metric {
+  margin-top: 10px;
+  color: var(--muted);
+}
+
+/* Bias section */
+.bias-card .bias-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.bias-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.bias-score {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+  min-width: 64px;
+  text-align: center;
+}
+
+.bias-meta .metric-label {
+  font-weight: 700;
+}
+
+/* Insight box */
+.insight-box {
+  border-left: 4px solid rgba(99, 102, 241, 0.12);
+  background: linear-gradient(
+    180deg,
+    rgba(250, 250, 255, 1),
+    rgba(255, 255, 255, 1)
+  );
+}
+.insight-box .insight-text {
+  color: #111827;
+}
+.recommendation {
+  margin-top: 10px;
+  color: var(--muted);
+}
+.recommendation-highlight {
+  display: inline-block;
+  padding: 6px 10px;
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+/* Heatmap / images */
+.image-grid {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.img-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.img-box {
+  width: 260px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.no-heatmap-box {
+  width: 260px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #fff7ed, #fff4f2);
+  color: #92400e;
+  text-align: center;
+  padding: 14px;
+  border: 1px solid rgba(249, 115, 22, 0.06);
+}
+.no-heatmap-box h4 {
+  margin: 0 0 6px 0;
+}
+.no-heatmap-box .sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* responsiveness */
+@media (max-width: 900px) {
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+  .img-box,
+  .no-heatmap-box {
+    width: 100%;
+    height: 220px;
+  }
+}
