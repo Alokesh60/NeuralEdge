@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Optional, List
-from app.services.nlp_service import run_nlp_audit
+from nlp_service import run_nlp_audit
 
 router = APIRouter(prefix="/audit/nlp", tags=["NLP"])
 
