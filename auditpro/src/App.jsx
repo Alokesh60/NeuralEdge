@@ -4,6 +4,7 @@ import TabNav from "./components/layout/TabNav";
 import NLPPanel from "./panels/nlp/NLPPanel";
 import TabularPanel from "./panels/tabular/TabularPanel";
 import CVPanel from "./panels/cv/CVPanel";
+import { Toaster } from "react-hot-toast";
 import "./App.css";
 
 function App() {

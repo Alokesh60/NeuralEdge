@@ -1,8 +1,8 @@
-import os
+# import os
 
-os.environ["TORCH_HOME"] = "E:\\huggingface_cache\\torch"
-os.environ["HF_HOME"] = "E:\\huggingface_cache"
-os.environ["TRANSFORMERS_CACHE"] = "E:\\huggingface_cache"
+# os.environ["TORCH_HOME"] = "E:\\huggingface_cache\\torch"
+# os.environ["HF_HOME"] = "E:\\huggingface_cache"
+# os.environ["TRANSFORMERS_CACHE"] = "E:\\huggingface_cache"
 
 
 

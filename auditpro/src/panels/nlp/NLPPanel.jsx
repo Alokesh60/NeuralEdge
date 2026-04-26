@@ -32,7 +32,8 @@ const NLPPanel = () => {
       winobias: {
         id: "winobias",
         title: "WinoBias Gender Stereotype Test",
-        description: "12 occupational pronoun prediction pairs on fill-mask model",
+        description:
+          "12 occupational pronoun prediction pairs on fill-mask model",
       },
       sentiment: {
         id: "sentiment",
@@ -120,10 +121,7 @@ const NLPPanel = () => {
     setComparisonData(results.filter(Boolean));
     setComparisonComplete(true);
     setViewMode("comparison");
-    setApiStatus({
-      type: "success",
-      message: "✅ Comparison complete — all 3 models audited",
-    });
+    setApiStatus(null);
   };
 
   return (
@@ -152,4 +150,3 @@ const NLPPanel = () => {
 };
 
 export default NLPPanel;
-
