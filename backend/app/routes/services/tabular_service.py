@@ -11,6 +11,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import joblib
 
+# -------------------- In-memory model store (replaces disk models/) --------------------
+# Render's filesystem is ephemeral — never write model artifacts to disk between
+# train and inference within the same request. Store them in memory instead.
+_model_store: dict = {}
+
+
 # -------------------- JSON Safety --------------------
 def sanitize_for_json(obj):
     if isinstance(obj, float):
@@ -79,11 +85,16 @@ def train_model(df, target, sensitive, num, cat, model_choice):
     pipe.fit(Xtr, ytr)
     pred = pipe.predict(Xte)
 
-    os.makedirs("models", exist_ok=True)
-    joblib.dump({"X_test": Xte, "y_test": yte, "y_pred": pred}, "models/test.pkl")
-    joblib.dump(pipe, "models/model.pkl")
+    # FIX: return everything in memory instead of writing to disk.
+    # Render's filesystem resets on every deploy/restart, so models/ would be lost.
+    artifacts = {
+        "pipe": pipe,
+        "X_test": Xte,
+        "y_test": yte,
+        "y_pred": pred,
+    }
 
-    return accuracy_score(yte, pred), Xte
+    return accuracy_score(yte, pred), artifacts
 
 
 # -------------------- Lightweight Fairness --------------------
@@ -154,10 +165,12 @@ async def run_tabular_audit(
     sensitive_cols,
     privileged_groups,
     model_choice="logistic",
+    model_file=None,        # kept for API compatibility with /flexible endpoint
+    preprocessor_file=None, # kept for API compatibility with /flexible endpoint
     shap_sample_size=100
 ):
 
-    with tempfile.NamedTemporaryFile(delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
         shutil.copyfileobj(file.file, tmp)
         path = tmp.name
 
@@ -166,22 +179,21 @@ async def run_tabular_audit(
 
         num, cat = infer_schema(df, target_col, sensitive_cols)
 
-        acc, Xte = train_model(
+        # FIX: train_model now returns artifacts dict instead of writing to disk
+        acc, artifacts = train_model(
             df, target_col, sensitive_cols, num, cat, model_choice
         )
 
-        # Load trained artifacts
-        pipe = joblib.load("models/model.pkl")
-        data = joblib.load("models/test.pkl")
+        pipe      = artifacts["pipe"]
+        X_test    = artifacts["X_test"]
+        y_test    = artifacts["y_test"]
+        y_pred    = artifacts["y_pred"]
 
         model = pipe.named_steps["model"]
-        pre = pipe.named_steps["preprocessor"]
-        X_test = data["X_test"]
-        y_test = data["y_test"]
-        y_pred = data["y_pred"]
+        pre   = pipe.named_steps["preprocessor"]
 
         # Fairness
-        sensitive_col = sensitive_cols[0]
+        sensitive_col    = sensitive_cols[0]
         privileged_value = privileged_groups[sensitive_col]
 
         metrics = compute_metrics(

@@ -1,8 +1,8 @@
-
-
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from typing import Optional
-from backend.app.routes.services.tabular_service import run_tabular_audit
+# FIX: was "from backend.app.routes.services..." which breaks when Render runs
+# from backend/ as the root. Use the package-relative path instead.
+from app.routes.services.tabular_service import run_tabular_audit
 import json
 
 router = APIRouter(prefix="/audit/tabular", tags=["Tabular"])
@@ -28,7 +28,7 @@ async def audit_tabular_flexible(
     model_choice: str = Form("logistic"),
     model_file: Optional[UploadFile] = File(None),
     preprocessor_file: Optional[UploadFile] = File(None),
-    shap_sample_size: Optional[int] = Form(None)         # NEW: optional SHAP sample size
+    shap_sample_size: Optional[int] = Form(None)
 ):
     try:
         sensitive_list = [s.strip() for s in sensitive_columns.split(",")]
@@ -49,7 +49,7 @@ async def audit_tabular_flexible(
             model_choice=model_choice,
             model_file=model_obj,
             preprocessor_file=preprocessor_obj,
-            shap_sample_size=shap_sample_size   # NEW: pass to the service
+            shap_sample_size=shap_sample_size
         )
         return result
     except Exception as e:

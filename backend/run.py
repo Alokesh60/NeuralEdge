@@ -1,15 +1,15 @@
 import os
-
-# ── Force ALL HuggingFace / PyTorch cache to E drive ──────────────────────────
-# This must happen before uvicorn (and therefore before any transformers import).
-# Without this, HF defaults to C:\Users\<user>\.cache\huggingface which fills C drive.
-_HF_CACHE = r"C:\Users\USER\.cache\huggingface"
-os.environ.setdefault("HF_HOME",            _HF_CACHE)
-os.environ.setdefault("TRANSFORMERS_CACHE",  os.path.join(_HF_CACHE, "hub"))
-os.environ.setdefault("HF_DATASETS_CACHE",   os.path.join(_HF_CACHE, "datasets"))
-os.environ.setdefault("TORCH_HOME",          os.path.join(_HF_CACHE, "torch"))
-
 import uvicorn
 
+# FIX: The original file hardcoded Windows paths like C:\Users\USER\.cache\huggingface
+# which crashes on Render (Linux). Those lines are removed entirely.
+# NLP and CV are deployed separately to Hugging Face, so there is nothing
+# HuggingFace/PyTorch related to configure in this backend.
+
+# FIX: Render injects $PORT dynamically. host must be 0.0.0.0 (not 127.0.0.1)
+# so Render's health checker and proxy can reach the app.
+# NOTE: Render does NOT use run.py — it uses the Procfile start command.
+# This file is kept for local development only.
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=False)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)

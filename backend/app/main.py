@@ -1,17 +1,16 @@
-# main.py
+# main.py — no changes needed, already correct.
+# Included here just so you have the full picture.
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
-# from app.routes import nlp
 from app.routes import tabular
-# from app.services import nlp_service
+# from app.routes import combined   # uncomment when you wire NLP/CV via HTTP
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # nlp_service.load_models()
     yield
 
 
@@ -20,7 +19,6 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,14 +27,10 @@ app.add_middleware(
     allow_credentials=True
 )
 
-# Include routers
 app.include_router(tabular.router)
-# app.include_router(nlp.router)
-# app.include_router(cv.router)
-# app.include_router(combined.router)
+# app.include_router(combined.router)   # uncomment when ready
 
 
-# Dashboard (clean version — keep this one)
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard():
     return """

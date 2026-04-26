@@ -9,11 +9,21 @@ scikit-learn
 scipy
 joblib
 
-aif360==0.5.0
-fairlearn==0.9.0
+# FIX: aif360 and fairlearn are NOT used anywhere in the current tabular code.
+# They were replaced by the lightweight compute_metrics() function.
+# Keeping them caused slow builds and potential install failures on Render.
+# Uncomment only if you re-add aif360/fairlearn usage later.
+# aif360==0.5.0
+# fairlearn==0.9.0
+
 shap==0.41.0
 
-opencv-python-headless
-pillow
+# opencv and pillow are only needed if CV routes are active in this backend.
+# Since CV is on Hugging Face, comment these out to speed up Render builds.
+# opencv-python-headless
+# pillow
 
 python-dotenv
+
+# FIX: gemini_service.py imports this but it was missing from requirements.txt.
+google-generativeai
