@@ -1,6 +1,7 @@
 # combined.py
 from fastapi import APIRouter, UploadFile
-from app.services import tabular_service, cv_service
+# from app.services import cv_service
+from backend.app.routes.services import tabular_service
 from nlp_service import nlp_service
 
 router = APIRouter(prefix="/audit/all", tags=["Combined"])
@@ -9,9 +10,9 @@ router = APIRouter(prefix="/audit/all", tags=["Combined"])
 async def audit_all(file: UploadFile):
 
     tabular = await tabular_service.run_tabular_audit(file)
-    nlp = await nlp_service.run_nlp_audit(file)
-    cv = await cv_service.run_cv_audit(file)
+    # nlp = await nlp_service.run_nlp_audit(file)
+    # cv = await cv_service.run_cv_audit(file)
 
     return {
-        "results": [tabular, nlp, cv]
+        "results": [tabular]
     }

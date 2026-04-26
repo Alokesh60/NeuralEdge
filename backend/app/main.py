@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 # from app.routes import nlp
-from app.routes import tabular, cv
+from app.routes import tabular
 # from app.services import nlp_service
 
 
@@ -32,7 +32,7 @@ app.add_middleware(
 # Include routers
 app.include_router(tabular.router)
 # app.include_router(nlp.router)
-app.include_router(cv.router)
+# app.include_router(cv.router)
 # app.include_router(combined.router)
 
 
