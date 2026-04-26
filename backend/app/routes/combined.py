@@ -1,6 +1,7 @@
 # combined.py
 from fastapi import APIRouter, UploadFile
-from app.services import tabular_service, nlp_service, cv_service
+from app.services import tabular_service, cv_service
+from nlp_service import nlp_service
 
 router = APIRouter(prefix="/audit/all", tags=["Combined"])
 

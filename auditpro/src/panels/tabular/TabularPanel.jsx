@@ -79,7 +79,7 @@ const TabularPanel = () => {
     try {
       await executeTabular(formData);
     } catch (err) {
-      alert("Tabular audit failed.");
+      alert("Tabular audit failed.", err);
     }
   };
 

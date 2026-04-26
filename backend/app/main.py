@@ -4,13 +4,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
-from app.routes import tabular, nlp, cv, combined
-from app.services import nlp_service
+# from app.routes import nlp
+from app.routes import tabular, cv, combined
+# from app.services import nlp_service
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    nlp_service.load_models()
+    # nlp_service.load_models()
     yield
 
 
@@ -25,11 +26,12 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True
 )
 
 # Include routers
 app.include_router(tabular.router)
-app.include_router(nlp.router)
+# app.include_router(nlp.router)
 app.include_router(cv.router)
 app.include_router(combined.router)
 
@@ -46,3 +48,7 @@ async def dashboard():
         </body>
     </html>
     """
+
+@app.get("/")
+def health():
+    return {"status": "alive"}
