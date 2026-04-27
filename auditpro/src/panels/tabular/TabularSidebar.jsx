@@ -36,20 +36,11 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
       return;
     }
 
-    // Replace the privileged_values sanitization block in handleSubmit:
-
-    let privilegedSanitized;
+    let privilegedSanitized = config.privileged_values;
     try {
-      const parsed = JSON.parse(config.privileged_values);
-
-      // Normalize: wrap any scalar values into arrays
-      // e.g. {"sex": "Male"} → {"sex": ["Male"]}
-      // e.g. {"sex": ["Male"]} → stays as-is
-      const normalized = Object.fromEntries(
-        Object.entries(parsed).map(([k, v]) => [k, Array.isArray(v) ? v : [v]]),
+      privilegedSanitized = JSON.stringify(
+        JSON.parse(config.privileged_values),
       );
-
-      privilegedSanitized = JSON.stringify(normalized);
     } catch {
       setLocalError('Privileged Group must be valid JSON like {"sex":"Male"}');
       return;
@@ -156,7 +147,7 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
             onChange={(e) => setCfg({ privileged_values: e.target.value })}
             disabled={loading}
             spellCheck={false}
-            placeholder='{"sex":"Male"}'
+            placeholder='{"sex": "Male"}'
           />
         </div>
 
