@@ -6,6 +6,8 @@ torchvision==0.17.2+cpu
 transformers
 datasets
 detoxify
-numpy
+numpy<2
 pandas
 matplotlib
+
+python-multipart
