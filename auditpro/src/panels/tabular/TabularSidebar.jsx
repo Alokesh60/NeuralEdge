@@ -36,9 +36,20 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
       return;
     }
 
-    let privilegedSanitized = config.privileged_values;
+    // Replace the privileged_values sanitization block in handleSubmit:
+
+    let privilegedSanitized;
     try {
-      privilegedSanitized = JSON.stringify(JSON.parse(config.privileged_values));
+      const parsed = JSON.parse(config.privileged_values);
+
+      // Normalize: wrap any scalar values into arrays
+      // e.g. {"sex": "Male"} → {"sex": ["Male"]}
+      // e.g. {"sex": ["Male"]} → stays as-is
+      const normalized = Object.fromEntries(
+        Object.entries(parsed).map(([k, v]) => [k, Array.isArray(v) ? v : [v]]),
+      );
+
+      privilegedSanitized = JSON.stringify(normalized);
     } catch {
       setLocalError('Privileged Group must be valid JSON like {"sex":"Male"}');
       return;
@@ -69,7 +80,8 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
     formData.append("model_choice", config.model_choice || "logistic");
 
     if (files.model) formData.append("model_file", files.model);
-    if (files.preprocessor) formData.append("preprocessor_file", files.preprocessor);
+    if (files.preprocessor)
+      formData.append("preprocessor_file", files.preprocessor);
 
     formData.append("shap_sample_size", String(shapInt));
 
@@ -103,12 +115,17 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
           <p className="file-size text-muted">CSV Dataset</p>
         </div>
 
-        <span className="card-label" style={{ marginTop: "1rem", display: "block" }}>
+        <span
+          className="card-label"
+          style={{ marginTop: "1rem", display: "block" }}
+        >
           Columns
         </span>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">TARGET COLUMN (LABEL)</label>
+          <label className="text-xs font-bold text-muted">
+            TARGET COLUMN (LABEL)
+          </label>
           <input
             className="chip active w-full"
             value={config.target_column}
@@ -130,22 +147,30 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
         </div>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">PRIVILEGED GROUP (JSON)</label>
+          <label className="text-xs font-bold text-muted">
+            PRIVILEGED GROUP (JSON)
+          </label>
           <input
             className="chip active w-full"
             value={config.privileged_values}
             onChange={(e) => setCfg({ privileged_values: e.target.value })}
             disabled={loading}
             spellCheck={false}
+            placeholder='{"sex":"Male"}'
           />
         </div>
 
-        <span className="card-label" style={{ marginTop: "1rem", display: "block" }}>
+        <span
+          className="card-label"
+          style={{ marginTop: "1rem", display: "block" }}
+        >
           Model
         </span>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">BASE ARCHITECTURE</label>
+          <label className="text-xs font-bold text-muted">
+            BASE ARCHITECTURE
+          </label>
           <select
             className="chip active w-full"
             value={config.model_choice}
@@ -158,7 +183,9 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
         </div>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">PRETRAINED MODEL (.pkl, optional)</label>
+          <label className="text-xs font-bold text-muted">
+            PRETRAINED MODEL (.pkl, optional)
+          </label>
           <input
             type="file"
             accept=".pkl"
@@ -168,7 +195,9 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
         </div>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">PREPROCESSOR (.pkl, optional)</label>
+          <label className="text-xs font-bold text-muted">
+            PREPROCESSOR (.pkl, optional)
+          </label>
           <input
             type="file"
             accept=".pkl"
@@ -178,7 +207,9 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
         </div>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">SHAP SAMPLE SIZE</label>
+          <label className="text-xs font-bold text-muted">
+            SHAP SAMPLE SIZE
+          </label>
           <input
             type="number"
             min={1}
@@ -195,7 +226,11 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
           </div>
         )}
 
-        <button type="submit" className="btn-run" disabled={loading || !files.dataset}>
+        <button
+          type="submit"
+          className="btn-run"
+          disabled={loading || !files.dataset}
+        >
           {loading ? "Processing..." : "▶ Run Tabular Audit"}
         </button>
       </form>

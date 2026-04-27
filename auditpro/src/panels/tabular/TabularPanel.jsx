@@ -13,21 +13,19 @@ const TabularIdle = () => (
   </div>
 );
 
-const LoadingState = ({ showWarmup }) => {
-  return (
-    <div className="card" style={{ textAlign: "center", padding: "40px" }}>
-      <div className="spinner"></div>
-      <p style={{ marginTop: "10px", fontWeight: 600 }}>
-        Running tabular bias audit...
+const LoadingState = ({ showWarmup }) => (
+  <div className="card" style={{ textAlign: "center", padding: "40px" }}>
+    <div className="spinner"></div>
+    <p style={{ marginTop: "10px", fontWeight: 600 }}>
+      Running tabular bias audit...
+    </p>
+    {showWarmup && (
+      <p style={{ marginTop: "6px", color: "var(--text-muted, #64748b)" }}>
+        Backend warming up, please wait...
       </p>
-      {showWarmup && (
-        <p style={{ marginTop: "6px", color: "var(--text-muted, #64748b)" }}>
-          Backend warming up, please wait...
-        </p>
-      )}
-    </div>
-  );
-};
+    )}
+  </div>
+);
 
 const TabularPanel = () => {
   const { data, loading, error, executeTabular, reset } = useAudit();
@@ -39,7 +37,6 @@ const TabularPanel = () => {
       setShowWarmup(false);
       return;
     }
-
     const t = setTimeout(() => setShowWarmup(true), 8000);
     return () => clearTimeout(t);
   }, [loading]);
@@ -48,45 +45,46 @@ const TabularPanel = () => {
     setLastRequest(formData);
     setShowWarmup(false);
     reset();
-
     try {
       await executeTabular(formData);
     } catch {
-      // error state is handled by useAudit
+      /* handled by useAudit */
     }
   };
 
-  const retry = async () => {
-    if (!lastRequest) return;
-    await runAudit(lastRequest);
-  };
-
   return (
-    <div className="panel dashboard active">
-      <aside>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "320px 1fr",
+        gap: "2rem",
+        alignItems: "start",
+      }}
+    >
+      <aside style={{ position: "sticky", top: "20px" }}>
         <TabularSidebar loading={loading} onRun={runAudit} onReset={reset} />
       </aside>
-
       <main>
         {!data && !loading && !error && <TabularIdle />}
         {loading && <LoadingState showWarmup={showWarmup} />}
-
         {!loading && error && (
-          <div className="card" style={{ textAlign: "center", padding: "20px" }}>
+          <div
+            className="card"
+            style={{ textAlign: "center", padding: "20px" }}
+          >
             <p style={{ color: "var(--danger, #ef4444)", fontWeight: 600 }}>
               ⚠ {error}
             </p>
             <button
               className="btn-run"
               style={{ marginTop: "12px" }}
-              onClick={retry}
+              onClick={() => lastRequest && runAudit(lastRequest)}
               disabled={!lastRequest || loading}
             >
               Retry
             </button>
           </div>
         )}
-
         {!loading && data && <TabularResults data={data} />}
       </main>
     </div>
