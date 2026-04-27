@@ -1223,3 +1223,21 @@ input[type="file"] {
   animation: spin 1s linear infinite;
   display: inline-block;
 }
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.input-group label {
+  display: block;
+  width: 100%;
+}
+
+.input-group input,
+.input-group select {
+  width: 100%;
+  display: block;
+}
