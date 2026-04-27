@@ -14,6 +14,78 @@ const isLikelyCsv = (file) => {
   return file.type === "text/csv" || name.endsWith(".csv");
 };
 
+/** Styled file button that matches the rest of the UI */
+const FileUploadButton = ({
+  label,
+  accept,
+  file,
+  onChange,
+  disabled,
+  icon = "📎",
+}) => (
+  <label
+    className="file-upload-btn"
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      background: "var(--bg2, #f1efe8)",
+      border: "1.5px dashed var(--color-border-secondary, rgba(0,0,0,0.2))",
+      borderRadius: "8px",
+      padding: "8px 12px",
+      fontSize: "12px",
+      color: "var(--color-text-secondary, #73726c)",
+      cursor: disabled ? "not-allowed" : "pointer",
+      width: "100%",
+      overflow: "hidden",
+      opacity: disabled ? 0.5 : 1,
+    }}
+  >
+    <span style={{ fontSize: "14px", flexShrink: 0 }}>{icon}</span>
+    <span
+      style={{
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        flex: 1,
+      }}
+    >
+      {file ? file.name : label}
+    </span>
+    <input
+      type="file"
+      accept={accept}
+      onChange={onChange}
+      disabled={disabled}
+      style={{ display: "none" }}
+    />
+  </label>
+);
+
+const SectionDivider = () => (
+  <hr
+    style={{
+      border: "none",
+      borderTop: "1px solid var(--color-border-tertiary, rgba(0,0,0,0.1))",
+      margin: "14px 0",
+    }}
+  />
+);
+
+const FieldLabel = ({ children }) => (
+  <label
+    style={{
+      fontSize: "10px",
+      fontWeight: 500,
+      letterSpacing: "0.07em",
+      color: "var(--color-text-secondary, #73726c)",
+      textTransform: "uppercase",
+    }}
+  >
+    {children}
+  </label>
+);
+
 const TabularSidebar = ({ onRun, onReset, loading }) => {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [files, setFiles] = useState({
@@ -46,11 +118,13 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
       return;
     }
 
-    const shapInt = Number.parseInt(String(config.shap_sample_size || ""), 10);
+    // Clamp SHAP between 1 and 20
+    let shapInt = Number.parseInt(String(config.shap_sample_size || ""), 10);
     if (!Number.isFinite(shapInt) || shapInt <= 0) {
       setLocalError("SHAP Sample Size must be a positive number.");
       return;
     }
+    shapInt = Math.min(shapInt, 20);
 
     const target = String(config.target_column || "").trim();
     const sensitive = String(config.sensitive_columns || "").trim();
@@ -69,11 +143,9 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
     formData.append("sensitive_columns", sensitive);
     formData.append("privileged_values", privilegedSanitized);
     formData.append("model_choice", config.model_choice || "logistic");
-
     if (files.model) formData.append("model_file", files.model);
     if (files.preprocessor)
       formData.append("preprocessor_file", files.preprocessor);
-
     formData.append("shap_sample_size", String(shapInt));
 
     await onRun?.(formData);
@@ -95,28 +167,28 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
       <span className="card-label">Tabular Audit</span>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="upload-area">
-          <input
-            type="file"
+        {/* ── Dataset ── */}
+        <div className="input-group">
+          <FieldLabel>CSV Dataset</FieldLabel>
+          <FileUploadButton
+            label="📂 Upload CSV Dataset"
             accept=".csv,text/csv"
+            file={files.dataset}
             onChange={(e) => setFile("dataset", e.target.files?.[0])}
-            required
             disabled={loading}
+            icon="📂"
           />
-          <p className="file-size text-muted">CSV Dataset</p>
         </div>
 
-        <span
-          className="card-label"
-          style={{ marginTop: "1rem", display: "block" }}
-        >
+        <SectionDivider />
+
+        {/* ── Columns ── */}
+        <span className="card-label" style={{ display: "block" }}>
           Columns
         </span>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">
-            TARGET COLUMN (LABEL)
-          </label>
+          <FieldLabel>Target column (label)</FieldLabel>
           <input
             className="chip active w-full"
             value={config.target_column}
@@ -126,9 +198,7 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
         </div>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">
-            SENSITIVE COLUMNS (comma separated)
-          </label>
+          <FieldLabel>Sensitive columns (comma separated)</FieldLabel>
           <input
             className="chip active w-full"
             value={config.sensitive_columns}
@@ -138,9 +208,7 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
         </div>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">
-            PRIVILEGED GROUP (JSON)
-          </label>
+          <FieldLabel>Privileged group (JSON)</FieldLabel>
           <input
             className="chip active w-full"
             value={config.privileged_values}
@@ -151,17 +219,15 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
           />
         </div>
 
-        <span
-          className="card-label"
-          style={{ marginTop: "1rem", display: "block" }}
-        >
+        <SectionDivider />
+
+        {/* ── Model ── */}
+        <span className="card-label" style={{ display: "block" }}>
           Model
         </span>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">
-            BASE ARCHITECTURE
-          </label>
+          <FieldLabel>Base architecture</FieldLabel>
           <select
             className="chip active w-full"
             value={config.model_choice}
@@ -174,45 +240,76 @@ const TabularSidebar = ({ onRun, onReset, loading }) => {
         </div>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">
-            PRETRAINED MODEL (.pkl, optional)
-          </label>
-          <input
-            type="file"
+          <FieldLabel>Pretrained model (.pkl, optional)</FieldLabel>
+          <FileUploadButton
+            label="Choose .pkl file..."
             accept=".pkl"
+            file={files.model}
             onChange={(e) => setFile("model", e.target.files?.[0])}
             disabled={loading}
           />
         </div>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">
-            PREPROCESSOR (.pkl, optional)
-          </label>
-          <input
-            type="file"
+          <FieldLabel>Preprocessor (.pkl, optional)</FieldLabel>
+          <FileUploadButton
+            label="Choose .pkl file..."
             accept=".pkl"
+            file={files.preprocessor}
             onChange={(e) => setFile("preprocessor", e.target.files?.[0])}
             disabled={loading}
           />
         </div>
 
         <div className="input-group">
-          <label className="text-xs font-bold text-muted">
-            SHAP SAMPLE SIZE
-          </label>
-          <input
-            type="number"
-            min={1}
-            className="chip active w-full"
-            value={config.shap_sample_size}
-            onChange={(e) => setCfg({ shap_sample_size: e.target.value })}
-            disabled={loading}
-          />
+          <FieldLabel>
+            SHAP sample size{" "}
+            <span
+              style={{
+                fontWeight: 400,
+                textTransform: "none",
+                letterSpacing: 0,
+              }}
+            >
+              (max 20)
+            </span>
+          </FieldLabel>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              className="chip active"
+              style={{ width: "72px", textAlign: "center", flexShrink: 0 }}
+              value={config.shap_sample_size}
+              onChange={(e) => {
+                let v = Number.parseInt(e.target.value, 10);
+                if (isNaN(v) || v < 1) v = 1;
+                if (v > 20) v = 20;
+                setCfg({ shap_sample_size: v });
+              }}
+              disabled={loading}
+            />
+            <span
+              style={{
+                fontSize: "11px",
+                color: "var(--color-text-tertiary, #888)",
+                lineHeight: 1.4,
+              }}
+            >
+              Samples used for SHAP explainability
+            </span>
+          </div>
         </div>
 
         {localError && (
-          <div style={{ color: "var(--danger, #ef4444)", fontWeight: 600 }}>
+          <div
+            style={{
+              color: "var(--danger, #ef4444)",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
+          >
             ⚠ {localError}
           </div>
         )}
