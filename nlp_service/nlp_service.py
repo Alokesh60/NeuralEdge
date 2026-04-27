@@ -71,7 +71,7 @@ def _get_fill_mask_pipeline(model_name: str):
 
 def load_models():
     global _sentiment_pipe, _detoxify_model
-    SENTIMENT_MODEL = "cardiffnlp/twitter-roberta-base-sentiment"
+    SENTIMENT_MODEL = "distilbert-base-uncased-finetuned-sst-2-english"
     _get_fill_mask_pipeline("bert-base-uncased")
     print(f"[NLP] Loading sentiment model '{SENTIMENT_MODEL}'…")
     _sentiment_pipe = pipeline("sentiment-analysis", model=SENTIMENT_MODEL, device=-1)

@@ -1,3 +1,5 @@
+// src/hooks/useAudit.js
+
 import { useState } from "react";
 import { auditApi } from "../api/client";
 
@@ -20,16 +22,12 @@ export const useAudit = () => {
         benchmarks,
         demographicGroups,
       });
-      if (result?.status === "error") {
+      if (result?.status === "error")
         throw new Error(result?.message || "Audit failed.");
-      }
       setData(result);
       return result;
     } catch (err) {
-      const msg =
-        err && typeof err.message === "string"
-          ? err.message
-          : "Backend connection failed.";
+      const msg = err?.message || "Backend connection failed.";
       setError(msg);
       throw err;
     } finally {
@@ -43,16 +41,31 @@ export const useAudit = () => {
     setData(null);
     try {
       const result = await auditApi.runTabularAudit(formData);
-      if (result?.status === "error") {
+      if (result?.status === "error")
         throw new Error(result?.message || "Tabular audit failed.");
-      }
       setData(result);
       return result;
     } catch (err) {
-      const msg =
-        err && typeof err.message === "string"
-          ? err.message
-          : "Tabular audit failed.";
+      const msg = err?.message || "Tabular audit failed.";
+      setError(msg);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const executeCV = async (imageFile) => {
+    setLoading(true);
+    setError(null);
+    setData(null);
+    try {
+      const result = await auditApi.runCvAudit(imageFile);
+      if (result?.status === "error")
+        throw new Error(result?.message || "CV audit failed.");
+      setData(result);
+      return result;
+    } catch (err) {
+      const msg = err?.message || "CV audit failed.";
       setError(msg);
       throw err;
     } finally {
@@ -66,6 +79,7 @@ export const useAudit = () => {
     error,
     executeNlp,
     executeTabular,
+    executeCV,
     reset: () => {
       setData(null);
       setError(null);

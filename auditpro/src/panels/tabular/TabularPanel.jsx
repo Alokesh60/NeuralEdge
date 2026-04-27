@@ -1,210 +1,93 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import TabularSidebar from "./TabularSidebar";
 import TabularResults from "./TabularResults";
 import { useAudit } from "../../hooks/useAudit";
 
-/* ===== Loading State ===== */
-const LoadingState = () => (
-  <div className="card p-12 text-center flex flex-col items-center gap-4">
-    {/* Controlled spinner */}
-    <div className="spinner-icon">⚙️</div>
-
-    <p className="font-semibold text-slate-600 animate-pulse">
-      Running Tabular Bias Audit...
-    </p>
-  </div>
-);
-
-/* ===== Idle State ===== */
 const TabularIdle = () => (
-  <div className="idle-state p-10 text-center">
-    <div className="text-4xl mb-4">📊</div>
-    <h3 className="font-bold text-lg">Tabular Data Audit</h3>
-    <p className="text-slate-500">
-      Upload your dataset and configure the audit parameters to get started.
+  <div className="card" style={{ textAlign: "center", padding: "40px" }}>
+    <h3 style={{ fontWeight: 700, marginBottom: "8px" }}>Tabular Data Audit</h3>
+    <p style={{ color: "var(--text-muted, #64748b)" }}>
+      Upload a CSV dataset, choose sensitive attributes, and run a fairness
+      audit.
     </p>
   </div>
 );
+
+const LoadingState = ({ showWarmup }) => {
+  return (
+    <div className="card" style={{ textAlign: "center", padding: "40px" }}>
+      <div className="spinner"></div>
+      <p style={{ marginTop: "10px", fontWeight: 600 }}>
+        Running tabular bias audit...
+      </p>
+      {showWarmup && (
+        <p style={{ marginTop: "6px", color: "var(--text-muted, #64748b)" }}>
+          Backend warming up, please wait...
+        </p>
+      )}
+    </div>
+  );
+};
 
 const TabularPanel = () => {
-  const { data: results, loading, executeTabular } = useAudit();
+  const { data, loading, error, executeTabular, reset } = useAudit();
+  const [showWarmup, setShowWarmup] = useState(false);
+  const [lastRequest, setLastRequest] = useState(null);
 
-  const handleRunAudit = async (e) => {
-    e.preventDefault();
-
-    const form = e.target;
-    const formData = new FormData();
-
-    const csvFile = form.csvFile?.files?.[0];
-    if (!csvFile) {
-      alert("Please upload a CSV file.");
+  useEffect(() => {
+    if (!loading) {
+      setShowWarmup(false);
       return;
     }
 
-    // Validate JSON
-    let privValuesSanitized = form.privilegedValues.value;
-    try {
-      privValuesSanitized = JSON.stringify(
-        JSON.parse(form.privilegedValues.value),
-      );
-    } catch {
-      alert('Privileged Group must be valid JSON like {"gender": "Male"}');
-      return;
-    }
+    const t = setTimeout(() => setShowWarmup(true), 8000);
+    return () => clearTimeout(t);
+  }, [loading]);
 
-    // SHAP validation
-    const shapVal = form.shapSampleSize?.value || "20";
-    const shapInt = parseInt(shapVal);
-    if (!Number.isFinite(shapInt) || shapInt <= 0) {
-      alert("SHAP Sample Size must be a positive number");
-      return;
-    }
-
-    // Append fields
-    formData.append("file", csvFile);
-    formData.append("target_column", form.targetColumn.value);
-    formData.append("sensitive_columns", form.sensitiveColumn.value);
-    formData.append("privileged_values", privValuesSanitized);
-    formData.append("model_choice", form.modelChoice.value || "logistic");
-
-    if (form.modelFile.files[0]) {
-      formData.append("model_file", form.modelFile.files[0]);
-    }
-
-    if (form.preprocessorFile.files[0]) {
-      formData.append("preprocessor_file", form.preprocessorFile.files[0]);
-    }
-
-    formData.append("shap_sample_size", shapInt);
+  const runAudit = async (formData) => {
+    setLastRequest(formData);
+    setShowWarmup(false);
+    reset();
 
     try {
       await executeTabular(formData);
-    } catch (err) {
-      alert("Tabular audit failed.", err);
+    } catch {
+      // error state is handled by useAudit
     }
   };
 
+  const retry = async () => {
+    if (!lastRequest) return;
+    await runAudit(lastRequest);
+  };
+
   return (
-    <div className="dashboard-layout">
-      {/* ===== SIDEBAR ===== */}
-      <aside className="sidebar">
-        <div className="card sidebar-card">
-          <form onSubmit={handleRunAudit} className="space-y-6">
-            {/* ===== DATASET ===== */}
-            <div className="section">
-              <div className="card-label">📁 Dataset</div>
-
-              <div className="form-group">
-                <label>CSV Dataset</label>
-                <input
-                  type="file"
-                  name="csvFile"
-                  accept=".csv"
-                  required
-                  className="file-upload"
-                />
-              </div>
-            </div>
-
-            {/* ===== CONFIG ===== */}
-            <div className="section">
-              <div className="card-label">⚙️ Configuration</div>
-
-              <div className="form-group">
-                <label>Target Column</label>
-                <input
-                  type="text"
-                  name="targetColumn"
-                  placeholder="e.g. hired"
-                  required
-                  className="input-field"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Sensitive Column</label>
-                <input
-                  type="text"
-                  name="sensitiveColumn"
-                  placeholder="gender"
-                  required
-                  className="input-field"
-                />
-                <p className="helper-text">e.g. gender, race</p>
-              </div>
-
-              <div className="form-group">
-                <label>Privileged Group</label>
-                <input
-                  type="text"
-                  name="privilegedValues"
-                  placeholder='{"gender":"Male"}'
-                  required
-                  className="input-field"
-                />
-                <p className="helper-text">JSON format</p>
-              </div>
-            </div>
-
-            {/* ===== MODEL ===== */}
-            <div className="section">
-              <div className="card-label">🧠 Model</div>
-
-              <div className="form-group">
-                <label>Base Architecture</label>
-                <select name="modelChoice" className="input-field">
-                  <option value="logistic">Logistic Regression</option>
-                  <option value="randomforest">Random Forest</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>Pretrained Model (.pkl)</label>
-                <input
-                  type="file"
-                  name="modelFile"
-                  accept=".pkl"
-                  className="file-upload"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Preprocessor (.pkl)</label>
-                <input
-                  type="file"
-                  name="preprocessorFile"
-                  accept=".pkl"
-                  className="file-upload"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>SHAP Sample Size</label>
-                <input
-                  type="number"
-                  name="shapSampleSize"
-                  defaultValue={20}
-                  className="input-field"
-                />
-              </div>
-            </div>
-
-            {/* ===== BUTTON ===== */}
-            <button type="submit" className="btn-run w-full" disabled={loading}>
-              {loading ? "⏳ Running..." : "🚀 Run Audit"}
-            </button>
-          </form>
-        </div>
+    <div className="panel dashboard active">
+      <aside>
+        <TabularSidebar loading={loading} onRun={runAudit} onReset={reset} />
       </aside>
 
-      {/* ===== MAIN ===== */}
-      <main className="main-content">
-        {loading ? (
-          <LoadingState />
-        ) : results ? (
-          <TabularResults data={results} />
-        ) : (
-          <TabularIdle />
+      <main>
+        {!data && !loading && !error && <TabularIdle />}
+        {loading && <LoadingState showWarmup={showWarmup} />}
+
+        {!loading && error && (
+          <div className="card" style={{ textAlign: "center", padding: "20px" }}>
+            <p style={{ color: "var(--danger, #ef4444)", fontWeight: 600 }}>
+              ⚠ {error}
+            </p>
+            <button
+              className="btn-run"
+              style={{ marginTop: "12px" }}
+              onClick={retry}
+              disabled={!lastRequest || loading}
+            >
+              Retry
+            </button>
+          </div>
         )}
+
+        {!loading && data && <TabularResults data={data} />}
       </main>
     </div>
   );
